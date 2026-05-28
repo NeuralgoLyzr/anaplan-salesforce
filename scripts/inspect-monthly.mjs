@@ -1,0 +1,12 @@
+import { MongoClient } from "mongodb";
+const uri = process.env.MONGODB_URI;
+const dbName = process.env.MONGODB_DB || "rev_rec";
+const client = new MongoClient(uri);
+await client.connect();
+const s = await client.db(dbName).collection("sessions").findOne({ session_id: "59996f0c-794e-422b-93ad-c25867b365cd" });
+await client.close();
+const p = s.agent_outputs.pricing.json;
+console.log("allocation line items:");
+for (const a of p.allocation ?? []) console.log("  ", a.line_item_id, "→", a.product_name, "| allocated:", a.allocated_revenue);
+console.log("\nmonthly_projection[0]:", JSON.stringify(p.monthly_projection?.[0], null, 2));
+console.log("\nmonthly breakdown keys:", Object.keys(p.monthly_projection?.[0]?.breakdown ?? {}));

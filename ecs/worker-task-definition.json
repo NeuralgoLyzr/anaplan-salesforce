@@ -1,0 +1,68 @@
+{
+  "_comment_": "ECS Fargate task definition for rpt-worker. Replace every <PLACEHOLDER> before registering. Register with: aws ecs register-task-definition --cli-input-json file://ecs/worker-task-definition.json",
+
+  "family": "rpt-worker",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  },
+
+  "_comment_executionRoleArn": "Pulls the image from ECR and reads secrets from Secrets Manager / SSM. Create once: AmazonECSTaskExecutionRolePolicy + a custom inline policy granting secretsmanager:GetSecretValue on the two secret ARNs below.",
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
+
+  "_comment_taskRoleArn": "Optional — only needed if the worker itself calls AWS APIs. The current worker only makes outbound HTTPS to the Amplify URL, so this can be omitted or left as a minimal role.",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/rpt-worker-task-role",
+
+  "containerDefinitions": [
+    {
+      "name": "worker",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/rpt-worker:latest",
+      "essential": true,
+      "stopTimeout": 30,
+      "_comment_stopTimeout": "Must be >= SHUTDOWN_TIMEOUT_MS (default 20s) so SIGTERM has time to drain in-flight ticks before SIGKILL.",
+
+      "environment": [
+        {
+          "name": "SYNC_URL_BASE",
+          "value": "https://<your-amplify-domain>"
+        },
+        {
+          "name": "DRIVE_INTERVAL_MS",
+          "value": "5000"
+        },
+        {
+          "name": "SYNC_INTERVAL_MS",
+          "value": "300000"
+        }
+      ],
+
+      "secrets": [
+        {
+          "name": "SALESFORCE_SYNC_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:rpt/salesforce-sync-secret-XXXXXX"
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/rpt-worker",
+          "awslogs-region": "<REGION>",
+          "awslogs-stream-prefix": "worker",
+          "awslogs-create-group": "true"
+        }
+      },
+
+      "_comment_resourceLimits": "Worker uses single-digit-MB RAM and ~0% CPU between ticks. 256/512 is the smallest Fargate slice and is generous.",
+
+      "readonlyRootFilesystem": true,
+      "_comment_readonlyRootFilesystem": "Defense-in-depth: the worker writes nothing to disk, so the FS can be read-only.",
+
+      "_comment_user": "node user is baked into the image (USER node in Dockerfile). Don't override."
+    }
+  ]
+}
