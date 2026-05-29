@@ -82,6 +82,49 @@ export async function downloadDocument(
   return res.arrayBuffer();
 }
 
+// DELETE /api/contracts/{contract_id}/documents/{content_document_id} — removes
+// the ContentDocument from Salesforce (and unlinks it from the contract). Used
+// when replacing a file: delete the old SF record before uploading the new one.
+export async function deleteDocument(
+  contractLocalId: string,
+  contentDocumentId: string,
+): Promise<void> {
+  const url = `${base()}/api/contracts/${encodeURIComponent(contractLocalId)}/documents/${encodeURIComponent(contentDocumentId)}`;
+  const res = await fetch(url, { method: "DELETE", cache: "no-store" });
+  if (!res.ok && res.status !== 204) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Salesforce gateway ${res.status} ${res.statusText} on ${url}: ${body.slice(0, 500)}`);
+  }
+}
+
+// POST /api/contracts/{contract_id}/documents (multipart) — uploads a new file
+// to an existing Salesforce contract. Returns the SF identifiers of the new
+// ContentVersion + ContentDocument so we can persist them on the local
+// UploadedFile.
+export type SfUploadResult = {
+  content_version_id: string;
+  content_document_id: string | null;
+  file_url: string | null;
+  download_url: string | null;
+};
+
+export async function uploadDocument(
+  salesforceContractId: string,
+  filename: string,
+  fileBuf: ArrayBuffer,
+  contentType: string = "application/pdf",
+): Promise<SfUploadResult> {
+  const url = `${base()}/api/contracts/${encodeURIComponent(salesforceContractId)}/documents`;
+  const form = new FormData();
+  form.append("file", new Blob([fileBuf], { type: contentType }), filename);
+  const res = await fetch(url, { method: "POST", body: form, cache: "no-store" });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Salesforce gateway ${res.status} ${res.statusText} on ${url}: ${body.slice(0, 500)}`);
+  }
+  return (await res.json()) as SfUploadResult;
+}
+
 // Convenience: pull a human-friendly account name out of the raw SOQL snapshot.
 // list_contracts() in the Python side stores the full snapshot on salesforce_response.
 export function accountNameFromContract(contract: SfContract): string | null {

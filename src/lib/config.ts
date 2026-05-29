@@ -52,6 +52,16 @@ export const billingConfig = () => ({
   preview_cycle_count: Number(optional("PREVIEW_CYCLE_COUNT", "3")),
 });
 
+// AWS SES SMTP — outbound email for anomaly send_email actions. Uses SES SMTP
+// credentials (NOT IAM keys), mirroring accenture-media-entertainment's setup.
+export const sesConfig = {
+  fromAddress: () => optional("SES_FROM_ADDRESS", "no-reply@ca.lyzr.app"),
+  host: () => optional("SMTP_HOST", "email-smtp.us-east-1.amazonaws.com"),
+  port: () => Number(optional("SMTP_PORT", "587")),
+  username: () => required("SMTP_USERNAME"),
+  password: () => required("SMTP_PASSWORD"),
+};
+
 export const salesforceConfig = {
   // Base URL of the FastAPI Salesforce gateway (anaplan-salesforce-backend).
   // The Next.js sync route calls /api/contracts and /api/contracts/{id}/documents

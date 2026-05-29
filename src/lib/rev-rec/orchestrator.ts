@@ -85,13 +85,33 @@ export function buildPayload(session: Session, agent: AgentKey): unknown {
         anaplan_config: anaplanConfig(),
       };
 
-    case "anomaly":
+    case "anomaly": {
+      // Incremental mode: after a document-upload rerun, we only want NEW
+      // anomalies tied to the newly-uploaded files appended to the existing
+      // anomaly response. Send a compact payload — previous anomaly JSON,
+      // the new file text(s), and explicit instructions.
+      const rerun = session.rerun;
+      if (rerun?.mode === "reader_pricing_anomaly_incremental") {
+        const newFiles = session.uploaded_files
+          .filter((f) => rerun.incremental_files.includes(f.doc_id))
+          .map((f) => ({ doc_id: f.doc_id, doc_name: f.filename, doc_type: f.doc_type, text: f.text }));
+        return {
+          mode: "incremental",
+          instructions:
+            "Inspect the newly-uploaded documents listed in incremental_files against the prior contract context. Return ONLY new anomalies that arise from these files — do NOT re-emit anomalies that are already present in previous_anomaly.anomalies. Keep the same JSON schema; if there are no new anomalies, return { \"anomalies\": [], \"summary\": null }.",
+          incremental_files: newFiles,
+          previous_anomaly: anomaly.json ?? {},
+          reader_brief_markdown: reader.markdown ?? "",
+          pricing_brief_markdown: pricing.markdown ?? "",
+        };
+      }
       return {
         reader_brief_markdown: reader.markdown ?? "",
         reader_json: reader.json ?? {},
         pricing_brief_markdown: pricing.markdown ?? "",
         pricing_json: pricing.json ?? {},
       };
+    }
 
     case "billing": {
       const g1 = session.gates.g1_revenue_plan;
@@ -197,11 +217,22 @@ function applyCompletion(session: Session, agent: AgentKey, text: string) {
   const out = session.agent_outputs[agent];
   out.raw = text;
   const parsed = parseAgentResponse(text);
+
+  const isIncrementalAnomaly =
+    agent === "anomaly" && session.rerun?.mode === "reader_pricing_anomaly_incremental";
+  const prevAnomalyJson = isIncrementalAnomaly ? session.agent_outputs.anomaly.json : null;
+  const prevAnomalyMarkdown = isIncrementalAnomaly ? session.agent_outputs.anomaly.markdown : null;
+
   out.markdown = parsed.markdown;
   out.json = parsed.json;
 
   // Agent-reported structured error.
   if (parsed.agentError) {
+    // For incremental anomaly, an error must not wipe the prior result.
+    if (isIncrementalAnomaly && prevAnomalyJson) {
+      out.json = prevAnomalyJson;
+      out.markdown = prevAnomalyMarkdown;
+    }
     failOrSoften(session, agent, parsed.agentError.error_code, parsed.agentError.error_detail);
     return;
   }
@@ -214,8 +245,19 @@ function applyCompletion(session: Session, agent: AgentKey, text: string) {
       audit(session, "agent_retry", { agent, detail: `malformed output: ${parsed.parseError}` });
       return;
     }
+    if (isIncrementalAnomaly && prevAnomalyJson) {
+      out.json = prevAnomalyJson;
+      out.markdown = prevAnomalyMarkdown;
+    }
     failOrSoften(session, agent, "MALFORMED_OUTPUT", parsed.parseError ?? "No JSON tail");
     return;
+  }
+
+  // Incremental anomaly merge: fold the newly-returned anomalies into the
+  // previous response so existing action_items survive untouched.
+  if (isIncrementalAnomaly && prevAnomalyJson) {
+    out.json = mergeAnomalies(prevAnomalyJson, parsed.json);
+    out.markdown = prevAnomalyMarkdown ?? parsed.markdown;
   }
 
   // Success.
@@ -226,15 +268,65 @@ function applyCompletion(session: Session, agent: AgentKey, text: string) {
   advanceAfter(session, agent);
 }
 
+// Append-only merge of incremental anomaly output into an existing response.
+// Keeps the prior anomalies + summary intact; recomputes by_severity counts.
+function mergeAnomalies(
+  prev: Record<string, unknown>,
+  incoming: Record<string, unknown>,
+): Record<string, unknown> {
+  const prevAnomalies = Array.isArray(prev?.anomalies) ? (prev.anomalies as Record<string, unknown>[]) : [];
+  const newAnomalies = Array.isArray(incoming?.anomalies)
+    ? (incoming.anomalies as Record<string, unknown>[])
+    : [];
+  const prevIds = new Set(prevAnomalies.map((a) => String(a.id ?? "")).filter(Boolean));
+  const appended = newAnomalies.filter((a) => {
+    const id = String(a.id ?? "");
+    return !id || !prevIds.has(id);
+  });
+  const merged = [...prevAnomalies, ...appended];
+
+  // Recompute summary counts if we have a previous summary block.
+  const prevSummary = (prev.summary && typeof prev.summary === "object") ? { ...(prev.summary as Record<string, unknown>) } : null;
+  const summary: Record<string, unknown> | null = prevSummary;
+  if (summary) {
+    const by: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+    for (const a of merged) {
+      const sev = String((a as Record<string, unknown>).severity ?? "info").toLowerCase();
+      if (sev in by) by[sev]++;
+    }
+    summary.total_anomalies = merged.length;
+    summary.by_severity = by;
+  }
+
+  return {
+    ...prev,
+    anomalies: merged,
+    ...(summary ? { summary } : {}),
+  };
+}
+
 // Fail the session, except Anomaly which is non-fatal (proceed to Gate 1).
 function failOrSoften(session: Session, agent: AgentKey, code: string, detail: string) {
   const out = session.agent_outputs[agent];
-  out.status = "failed";
-  out.error_code = code;
-  out.error_detail = detail;
+  const isIncrementalAnomaly =
+    agent === "anomaly" && session.rerun?.mode === "reader_pricing_anomaly_incremental";
+  if (!isIncrementalAnomaly) {
+    out.status = "failed";
+    out.error_code = code;
+    out.error_detail = detail;
+  } else {
+    // Don't mark as failed — the previous anomaly output was restored before
+    // failOrSoften was called, so the agent_output remains the prior success.
+    out.status = "complete";
+  }
   finalizeTiming(out);
   if (agent === "anomaly") {
-    audit(session, "agent_error_nonfatal", { agent, detail: code });
+    if (isIncrementalAnomaly) {
+      session.rerun = null;
+      audit(session, "rerun_anomaly_softfail", { agent, detail: code });
+    } else {
+      audit(session, "agent_error_nonfatal", { agent, detail: code });
+    }
     session.status = "gate1";
     return;
   }
@@ -246,6 +338,7 @@ function failOrSoften(session: Session, agent: AgentKey, code: string, detail: s
 // NOTE: this is sync (mutating); the actual next submit is fired by the caller
 // via maybeSubmitNext to keep tick's network calls explicit.
 function advanceAfter(session: Session, agent: AgentKey) {
+  const rerun = session.rerun ?? null;
   switch (agent) {
     case "reader": {
       const name = deriveCompanyName(session);
@@ -255,11 +348,28 @@ function advanceAfter(session: Session, agent: AgentKey) {
       break;
     }
     case "pricing": {
+      // Reader+Pricing-only rerun: skip the anomaly stage entirely.
+      if (rerun?.mode === "reader_pricing") {
+        session.rerun = null;
+        audit(session, "rerun_complete", { detail: "reader_pricing" });
+        session.status = "gate1";
+        break;
+      }
+      // Incremental anomaly rerun: re-fire anomaly with the new files only.
+      if (rerun?.mode === "reader_pricing_anomaly_incremental") {
+        session.agent_outputs.anomaly.status = "pending";
+        session.status = "anomaly";
+        break;
+      }
       session.agent_outputs.anomaly.status = "pending";
       session.status = "anomaly";
       break;
     }
     case "anomaly": {
+      if (rerun?.mode === "reader_pricing_anomaly_incremental") {
+        session.rerun = null;
+        audit(session, "rerun_complete", { detail: "reader_pricing_anomaly_incremental" });
+      }
       session.status = "gate1";
       break;
     }
@@ -301,6 +411,55 @@ export async function drive(session: Session): Promise<void> {
 
     if (!submitted && stateSignature(session) === before) break;
   }
+}
+
+// Begin a partial pipeline rerun after a document upload action.
+// - "reader_pricing": reset reader + pricing outputs and re-run them. After
+//   pricing completes, jump to gate1 (anomaly stays as-is).
+// - "reader_pricing_anomaly_incremental": same as above, plus fire the anomaly
+//   agent with an append-only payload (only newDocIds are included), and merge
+//   any new anomalies into the prior anomaly JSON.
+//
+// Caller should call drive(session) after this returns (sync), then save.
+export function startRerun(
+  session: Session,
+  mode: "reader_pricing" | "reader_pricing_anomaly_incremental",
+  newDocIds: string[],
+): void {
+  session.agent_outputs.reader = emptyForRerun(session.agent_outputs.reader);
+  session.agent_outputs.pricing = emptyForRerun(session.agent_outputs.pricing);
+  session.agent_outputs.reader.status = "pending";
+  session.rerun = {
+    mode,
+    incremental_files: newDocIds,
+    started_at: now(),
+  };
+  // If any file still has a LlamaParse job pending, drain parsing before the
+  // agents fire. tickParsing → advanceParsing flips status to "reading" once
+  // every file is terminal.
+  const anyParsing = session.uploaded_files.some(
+    (f) => f.parse_status === "PENDING" || f.parse_status === "RUNNING",
+  );
+  session.status = anyParsing ? "extracting" : "reading";
+  audit(session, "rerun_started", { detail: mode, meta: { new_files: newDocIds } });
+}
+
+function emptyForRerun(prev: AgentOutput): AgentOutput {
+  return {
+    status: "pending",
+    markdown: null,
+    json: null,
+    raw: null,
+    task_id: null,
+    session_id: null,
+    attempts: 0,
+    ran_at: null,
+    completed_at: null,
+    duration_ms: null,
+    error_code: null,
+    error_detail: null,
+  };
+  void prev;
 }
 
 // Captures the progress-relevant state so the drive loop knows when to stop.

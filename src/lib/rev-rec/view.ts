@@ -324,12 +324,31 @@ export const SEVERITY_STYLE: Record<Severity, { pill: string; dot: string; label
 // friendly categories (derived from ui_trigger) for the "Recommended actions"
 // panel, carrying their parent anomaly's context and the user's decision.
 
+export type ActionKind = "upload_document" | "send_email" | "acknowledge" | "other";
+
+export interface UploadDocumentParams {
+  document_name: string | null;
+  document_reference: string | null;
+  source_doc_id: string | null;
+  operation: "add" | "update";
+  triggers_rerun: boolean;
+}
+
+export interface SendEmailParams {
+  recipient_role: string | null;
+  recipient_name: string | null;
+  recipient_email: string | null;
+  subject: string;
+  body: string;
+}
+
 export interface ActionItemView {
   actionId: string;
   title: string;
   context: string;
   uiTrigger: string;
-  priority: string;        // before_approval | post_approval
+  kind: ActionKind;        // normalized from action.type / ui_trigger
+  priority: string;        // before_approval | post_approval | informational
   blocking: boolean;
   targetRole: string | null;
   targetName: string | null;
@@ -338,6 +357,9 @@ export interface ActionItemView {
   whatToCheck: string | null;
   citations: string[];
   status: ActionStatus;
+  // Kind-specific params, only populated for the matching kind.
+  uploadParams: UploadDocumentParams | null;
+  emailParams: SendEmailParams | null;
 }
 
 export interface ActionCategory {
@@ -355,15 +377,66 @@ export interface ActionItemsView {
 
 const TRIGGER_CATEGORY: Record<string, { key: string; label: string; iconKey: string }> = {
   draft_email: { key: "comms", label: "Emails & Escalations", iconKey: "mail" },
+  send_email: { key: "comms", label: "Emails & Escalations", iconKey: "mail" },
   request_clarification: { key: "comms", label: "Emails & Escalations", iconKey: "mail" },
   escalate: { key: "comms", label: "Emails & Escalations", iconKey: "mail" },
   add_to_calendar: { key: "deadlines", label: "Deadlines & Reminders", iconKey: "calendar" },
   request_document: { key: "docs", label: "Documents", iconKey: "file" },
+  upload_document: { key: "docs", label: "Documents", iconKey: "file" },
   attach_supporting_doc: { key: "docs", label: "Documents", iconKey: "file" },
   flag_for_review: { key: "reviews", label: "Reviews & Approvals", iconKey: "review" },
   update_record: { key: "records", label: "Records & Bookkeeping", iconKey: "record" },
+  acknowledge: { key: "other", label: "Acknowledgements", iconKey: "review" },
 };
 const OTHER_CATEGORY = { key: "other", label: "Other actions", iconKey: "dot" };
+
+function deriveKind(trigger: string): ActionKind {
+  switch (trigger) {
+    case "upload_document":
+    case "request_document":
+    case "attach_supporting_doc":
+      return "upload_document";
+    case "send_email":
+    case "draft_email":
+    case "request_clarification":
+    case "escalate":
+      return "send_email";
+    case "acknowledge":
+      return "acknowledge";
+    default:
+      return "other";
+  }
+}
+
+function extractUploadParams(it: Rec): UploadDocumentParams | null {
+  const p = pickField(it, "params") as Rec | undefined;
+  if (!p && !pickField(it, "source_doc_id", "operation")) return null;
+  const src = p ?? it;
+  const op = String(pickField(src, "operation") ?? "add").toLowerCase();
+  return {
+    document_name: asText(pickField(src, "document_name", "name", "title")),
+    document_reference: asText(pickField(src, "document_reference", "reference")),
+    source_doc_id: asText(pickField(src, "source_doc_id", "doc_id")),
+    operation: op === "update" ? "update" : "add",
+    triggers_rerun: pickField(src, "triggers_rerun", "rerun") === true,
+  };
+}
+
+function extractEmailParams(it: Rec): SendEmailParams | null {
+  const p = pickField(it, "params") as Rec | undefined;
+  if (!p && !pickField(it, "subject", "body")) return null;
+  const src = p ?? it;
+  const subject = asText(pickField(src, "subject")) ?? "";
+  const body = asText(pickField(src, "body", "message")) ?? "";
+  if (!subject && !body) return null;
+  return {
+    recipient_role: asText(pickField(src, "recipient_role", "target_role", "role")),
+    recipient_name: asText(pickField(src, "recipient_name", "target_name", "name")),
+    recipient_email: asText(pickField(src, "recipient_email", "target_email", "email")),
+    subject,
+    body,
+  };
+}
 
 export function getActionItems(session: Session): ActionItemsView {
   const a = session.agent_outputs.anomaly.json;
@@ -387,20 +460,29 @@ export function getActionItems(session: Session): ActionItemsView {
       const actionId = String(pickField(it, "action_id", "id") ?? `${ai}:${ii}`);
       const trigger = String(pickField(it, "ui_trigger", "type", "action_type") ?? "other");
       const cat = TRIGGER_CATEGORY[trigger] ?? OTHER_CATEGORY;
+      const kind = deriveKind(trigger);
+      const params = pickField(it, "params") as Rec | undefined;
       const view: ActionItemView = {
         actionId,
         title: asText(pickField(it, "title", "name")) ?? "Action",
-        context: asText(pickField(it, "context", "description", "detail")) ?? "",
+        context: asText(pickField(it, "context", "description", "detail", "details")) ?? "",
         uiTrigger: trigger,
+        kind,
         priority: String(pickField(it, "priority") ?? ""),
         blocking: pickField(it, "blocks_gate_1", "blocking") === true,
-        targetRole: asText(pickField(it, "target_role", "role")),
-        targetName: asText(pickField(it, "target_name", "name")),
+        targetRole:
+          asText(pickField(it, "target_role", "role")) ??
+          asText(pickField(params, "recipient_role", "target_role", "role")),
+        targetName:
+          asText(pickField(it, "target_name")) ??
+          asText(pickField(params, "recipient_name", "target_name")),
         anomalyTitle,
         severity,
         whatToCheck,
         citations,
         status: states[actionId]?.status ?? "pending",
+        uploadParams: kind === "upload_document" ? extractUploadParams(it) : null,
+        emailParams: kind === "send_email" ? extractEmailParams(it) : null,
       };
       total++;
       if (view.blocking) blocking++;
@@ -525,6 +607,51 @@ function asNum(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+// ─── Invoice email template (Agent 4) ────────────────────────────
+// The Billing agent emits a SINGLE reusable email subject + body alongside the
+// invoice schedule. The same template is reused for every invoice in the run —
+// only the six allowed placeholders ({{invoice_id}}, {{period_label}},
+// {{currency}}, {{grand_total}}, {{issue_date}}, {{due_date}}) vary.
+
+export interface InvoiceEmailTemplate {
+  subject: string;
+  body: string;
+}
+
+export function getInvoiceEmailTemplate(session: Session): InvoiceEmailTemplate | null {
+  const b = session.agent_outputs.billing.json;
+  const tpl = pickField(b, "invoice_email_template");
+  if (!isRec(tpl)) return null;
+  const subject = asText(pickField(tpl, "subject"));
+  const body = asText(pickField(tpl, "body"));
+  if (!subject || !body) return null;
+  return { subject, body };
+}
+
+// Substitute the six allowed placeholders against a specific invoice.
+// Anything outside the whitelist is left untouched (so `[Your name]` survives
+// for the user to fill in inside the composer).
+export function fillInvoiceEmailTemplate(
+  template: InvoiceEmailTemplate,
+  inv: InvoiceView,
+): InvoiceEmailTemplate {
+  const subs: Record<string, string> = {
+    invoice_id: inv.id,
+    period_label: inv.periodLabel ?? "",
+    currency: inv.currency ?? "",
+    grand_total: inv.total ?? (inv.totalNumber != null ? formatCell(inv.totalNumber) : ""),
+    issue_date: inv.issueDate ?? "",
+    due_date: inv.dueDate ?? "",
+  };
+  const replace = (s: string) =>
+    s.replace(/\{\{\s*(invoice_id|period_label|currency|grand_total|issue_date|due_date)\s*\}\}/g,
+      (_m, k) => subs[k] ?? "");
+  return {
+    subject: replace(template.subject),
+    body: replace(template.body),
+  };
+}
+
 export function getInvoices(session: Session): InvoiceView[] {
   const b = session.agent_outputs.billing.json;
   const arr = pickArray(b, "invoices", "bills");
@@ -596,16 +723,25 @@ export function getInvoices(session: Session): InvoiceView[] {
   base.forEach(({ row, raw }, i) => {
     const explicitStatus = asText(pickField(row, "status"));
     const explicitLock = asText(pickField(row, "lock_state", "lockState"));
+    const sentAt = asText(pickField(row, "sent_at"));
+    const legacy = legacyOf(raw.id);
+    // Heal pass: if an invoice has sent_at set (or its legacy gate says
+    // sent/approved) but the explicit status says "actionable"/"scheduled",
+    // that's the corrupted-state signature from the old next-pick bug —
+    // restore it to paid+locked at the view layer so the UI never offers
+    // re-sending an already-sent invoice.
+    const wasSent = !!sentAt || legacy?.sent === true || legacy?.status === "approved";
+    if (wasSent) {
+      raw.status = "paid";
+      raw.lockState = "locked";
+      return;
+    }
     if (explicitStatus || explicitLock) {
       raw.status = (explicitStatus ?? "scheduled") as InvoiceStatus;
       raw.lockState = (explicitLock ?? (raw.status === "actionable" ? "unlocked" : "locked")) as InvoiceLockState;
       return;
     }
-    const g = legacyOf(raw.id);
-    if (g?.sent || g?.status === "approved") {
-      raw.status = "paid";
-      raw.lockState = "locked";
-    } else if (g?.status === "rejected") {
+    if (legacy?.status === "rejected") {
       raw.status = "archived";
       raw.lockState = "locked";
     } else {
@@ -614,9 +750,28 @@ export function getInvoices(session: Session): InvoiceView[] {
       raw.lockState = "locked";
     }
   });
+  // The "first actionable" sweep only runs when no invoice carried an explicit
+  // state. With the heal pass above, every paid invoice is already pinned —
+  // we just need to find the lowest-sequence non-paid invoice in display order.
   if (firstUndecidedIdx !== -1) {
     base[firstUndecidedIdx].raw.status = "actionable";
     base[firstUndecidedIdx].raw.lockState = "unlocked";
+  } else {
+    // If the explicit branch ran for everything, make sure exactly one invoice
+    // is "actionable+unlocked": the lowest-sequence one whose status is
+    // "scheduled". Heals data where the next-pick reverted an earlier paid
+    // invoice and left N actionable rows.
+    const actionable = base
+      .filter((b) => b.raw.status === "scheduled")
+      .sort((a, b) => (a.raw.sequence ?? 0) - (b.raw.sequence ?? 0))[0];
+    if (actionable) {
+      // Only flip if no other invoice is already in actionable state.
+      const anyActionable = base.some((b) => b.raw.status === "actionable");
+      if (!anyActionable) {
+        actionable.raw.status = "actionable";
+        actionable.raw.lockState = "unlocked";
+      }
+    }
   }
 
   return base.map((b) => b.raw);

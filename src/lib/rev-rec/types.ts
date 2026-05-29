@@ -37,6 +37,12 @@ export interface UploadedFile {
   parse_status: ParseStatus;   // job lifecycle for LlamaParse
   llama_file_id: string | null;
   llama_job_id: string | null;
+
+  // Salesforce linkage (populated when the file was ingested from a Salesforce
+  // contract, or when the user uploaded a replacement that we pushed to SF).
+  // Null for purely-manual uploads with no SF counterpart.
+  salesforce_content_document_id?: string | null;
+  salesforce_content_version_id?: string | null;
 }
 
 export interface AgentOutput {
@@ -94,7 +100,10 @@ export interface AuditEntry {
 }
 
 // Per anomaly action-item decision (keyed by action_id).
-export type ActionStatus = "pending" | "accepted" | "rejected";
+// - accepted: action was performed (email sent / file uploaded)
+// - completed: manual task marked done by the user (no automation invoked)
+// - rejected: dismissed
+export type ActionStatus = "pending" | "accepted" | "completed" | "rejected";
 export interface ActionItemState {
   status: ActionStatus;
   updated_at: string;
@@ -136,6 +145,20 @@ export interface Session {
 
   // Accept/reject decisions for anomaly action items, keyed by action_id.
   action_items: Record<string, ActionItemState>;
+
+  // Set when a document-upload action triggers a partial re-run of the pipeline.
+  // - mode "reader_pricing": after Reader+Pricing complete, jump straight to
+  //   gate1 (anomaly is NOT re-run as a full replacement).
+  // - mode "reader_pricing_anomaly_incremental": after Reader+Pricing complete,
+  //   fire Anomaly with incremental_files only and append new anomalies into
+  //   anomaly.json.anomalies before transitioning to gate1.
+  // incremental_files holds the doc_ids whose text should be sent to the
+  // append-mode Anomaly run. Cleared when the rerun finishes.
+  rerun?: {
+    mode: "reader_pricing" | "reader_pricing_anomaly_incremental";
+    incremental_files: string[];
+    started_at: string;
+  } | null;
 
   errors: { agent?: AgentKey; code: string; detail: string; ts: string }[];
   audit_log: AuditEntry[];

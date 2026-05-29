@@ -2,22 +2,31 @@
 
 import { useEffect, useState } from "react";
 import {
-  Receipt, Eye, Send, CheckCircle2, Loader2, Download, FileText, Lock, Clock, XCircle,
+  Receipt, Eye, Send, CheckCircle2, Download, FileText, Lock, Clock, XCircle,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Session } from "@/lib/rev-rec/types";
-import { getInvoices, type InvoiceView, type InvoiceStatus } from "@/lib/rev-rec/view";
+import {
+  getInvoices, getInvoiceEmailTemplate, fillInvoiceEmailTemplate,
+  type InvoiceView, type InvoiceStatus,
+} from "@/lib/rev-rec/view";
 import { InvoiceTemplate } from "./InvoiceTemplate";
+import { EmailComposeModal } from "./EmailComposeModal";
 import { cn } from "@/lib/utils";
 
 interface Props {
   session: Session;
   // Each InvoiceCard awaits this and runs its own local loader, so clicking
   // "Approve & Send" on one invoice doesn't spin other invoices' buttons.
-  onApprove: (invoiceId: string) => Promise<void> | void;
+  // Called by send-email flow with the composed email; we POST to the
+  // per-invoice send-email route and refresh the session afterwards.
+  onSendInvoice: (
+    invoiceId: string,
+    payload: { to: string; subject: string; body: string },
+  ) => Promise<void>;
 }
 
 const STATUS_PILL: Record<InvoiceStatus, { label: string; cls: string; Icon: React.ComponentType<{ className?: string }> }> = {
@@ -28,10 +37,14 @@ const STATUS_PILL: Record<InvoiceStatus, { label: string; cls: string; Icon: Rea
   rejected:   { label: "Rejected",   cls: "bg-red-500/10 text-red-600 border-red-400/20", Icon: XCircle },
 };
 
-export function BillsPanel({ session, onApprove }: Props) {
+export function BillsPanel({ session, onSendInvoice }: Props) {
   const invoices = getInvoices(session);
+  const emailTemplate = getInvoiceEmailTemplate(session);
   const [preview, setPreview] = useState<InvoiceView | null>(null);
   const [printInv, setPrintInv] = useState<InvoiceView | null>(null);
+  // The invoice the user is currently composing an email for — drives both
+  // the modal's open state and the placeholder substitutions.
+  const [composing, setComposing] = useState<InvoiceView | null>(null);
 
   // Trigger the browser print dialog once the print area has rendered.
   useEffect(() => {
@@ -73,11 +86,40 @@ export function BillsPanel({ session, onApprove }: Props) {
         <InvoiceCard
           key={inv.id}
           inv={inv}
-          onApprove={onApprove}
+          onApproveAndSend={() => setComposing(inv)}
           onPreview={() => setPreview(inv)}
           onPrint={() => setPrintInv(inv)}
         />
       ))}
+
+      {/* Email composer for the currently-actionable invoice. */}
+      {composing && (() => {
+        const filled = emailTemplate
+          ? fillInvoiceEmailTemplate(emailTemplate, composing)
+          : { subject: `Invoice ${composing.id}`, body: `Please find attached invoice ${composing.id}.` };
+        const pdfUrl = `/api/companies/${session.session_id}/invoices/${encodeURIComponent(composing.id)}/pdf`;
+        return (
+          <EmailComposeModal
+            open
+            initialSubject={filled.subject}
+            initialBody={filled.body}
+            initialTo={composing.customer?.billingContact === "Accounts Payable" ? "" : ""}
+            recipientRole="Customer billing contact"
+            recipientName={composing.customer?.name ?? null}
+            attachment={{
+              filename: `${composing.id}.pdf`,
+              url: pdfUrl,
+              contentType: "application/pdf",
+              sizeHint: "Invoice PDF",
+            }}
+            onClose={() => setComposing(null)}
+            onSend={async ({ to, subject, body }) => {
+              await onSendInvoice(composing.id, { to, subject, body });
+              setComposing(null);
+            }}
+          />
+        );
+      })()}
 
       {/* Preview modal */}
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
@@ -111,27 +153,17 @@ export function BillsPanel({ session, onApprove }: Props) {
 }
 
 function InvoiceCard({
-  inv, onApprove, onPreview, onPrint,
+  inv, onApproveAndSend, onPreview, onPrint,
 }: {
   inv: InvoiceView;
-  onApprove: (invoiceId: string) => Promise<void> | void;
+  onApproveAndSend: () => void;
   onPreview: () => void;
   onPrint: () => void;
 }) {
-  // Local "sending" state — each card tracks ONLY its own click so other cards
-  // don't show a spinner when one is in flight.
-  const [sending, setSending] = useState(false);
-
   const meta = STATUS_PILL[inv.status] ?? STATUS_PILL.scheduled;
   const StatusIcon = meta.Icon;
   const unlocked = inv.lockState === "unlocked";
   const sent = inv.status === "paid";
-
-  async function handleSend() {
-    setSending(true);
-    try { await onApprove(inv.id); }
-    finally { setSending(false); }
-  }
 
   return (
     <div
@@ -173,8 +205,8 @@ function InvoiceCard({
               <Download className="w-3.5 h-3.5" /> PDF
             </Button>
           ) : unlocked ? (
-            <Button size="sm" className="gap-1.5" disabled={sending} onClick={handleSend}>
-              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+            <Button size="sm" className="gap-1.5" onClick={onApproveAndSend}>
+              <Send className="w-3.5 h-3.5" />
               Approve &amp; Send
             </Button>
           ) : null}

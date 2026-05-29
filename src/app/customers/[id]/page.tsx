@@ -108,25 +108,27 @@ export default function CustomerWorkspace() {
     }
   }
 
-  async function gate2(invoiceId: string) {
-    setActionBusy(true);
-    try {
-      const res = await fetch(`/api/companies/${id}/gate2`, {
+  // Send an invoice via SES (PDF auto-attached server-side) and mark it paid.
+  // This replaces the direct gate2 "approve" path when the user uses the
+  // Approve & Send → email composer flow.
+  async function sendInvoiceEmail(
+    invoiceId: string,
+    payload: { to: string; subject: string; body: string },
+  ) {
+    const res = await fetch(
+      `/api/companies/${id}/invoices/${encodeURIComponent(invoiceId)}/send-email`,
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invoice_id: invoiceId, decision: "approve" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
-      applySession(data.session);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setActionBusy(false);
-    }
+        body: JSON.stringify(payload),
+      },
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Send failed");
+    applySession(data.session);
   }
 
-  async function action(actionId: string, decision: "accept" | "reject") {
+  async function action(actionId: string, decision: "accept" | "reject" | "complete") {
     try {
       const res = await fetch(`/api/companies/${id}/action`, {
         method: "POST",
@@ -139,6 +141,48 @@ export default function CustomerWorkspace() {
     } catch (e) {
       setError((e as Error).message);
     }
+  }
+
+  async function uploadDocument(
+    actionId: string,
+    file: File,
+    params: { operation: "add" | "update"; sourceDocId: string | null; triggersRerun: boolean },
+  ) {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("action_id", actionId);
+    form.append("operation", params.operation);
+    if (params.sourceDocId) form.append("source_doc_id", params.sourceDocId);
+    form.append("triggers_rerun", String(params.triggersRerun));
+    const res = await fetch(`/api/companies/${id}/document-upload`, {
+      method: "POST",
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Document upload failed");
+    applySession(data.session);
+    return data.upload_summary as {
+      filename: string;
+      doc_id: string;
+      operation: "add" | "update";
+      pushed_to_salesforce: boolean;
+      triggers_rerun: boolean;
+      total_files: number;
+    } | undefined;
+  }
+
+  async function sendEmail(
+    actionId: string,
+    payload: { to: string; subject: string; body: string },
+  ) {
+    const res = await fetch(`/api/companies/${id}/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action_id: actionId, ...payload }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Email send failed");
+    applySession(data.session);
   }
 
   async function gate4() {
@@ -300,12 +344,15 @@ export default function CustomerWorkspace() {
 
       {tab === "anomaly" && (
         <div className="space-y-4">
-          <RecommendedActions session={session} onAction={action} />
+          <RecommendedActions
+            session={session}
+            handlers={{ decide: action, uploadDocument, sendEmail }}
+          />
           <AnomalyReview session={session} />
         </div>
       )}
 
-      {tab === "bills" && <BillsPanel session={session} onApprove={gate2} />}
+      {tab === "bills" && <BillsPanel session={session} onSendInvoice={sendInvoiceEmail} />}
 
       {tab === "jes" && <JournalEntriesPanel session={session} busy={actionBusy} onPost={gate4} />}
 

@@ -18,6 +18,13 @@ export type IngestResult =
 //   3. Download each PDF via the gateway proxy.
 //   4. Hand off to createSessionFromPdfBuffers, which extracts text, creates the
 //      Session, and starts the Lyzr pipeline.
+//
+// IMPORTANT: this function MUST be strictly idempotent per salesforce_contract_id.
+// If a Session already exists for the contract, return early WITHOUT touching
+// it — files pushed to that contract by /api/companies/[id]/document-upload
+// (anomaly action box) are owned by the existing session. Mutating the session
+// from here would race with the action-driven upload and could surface as a
+// duplicate "new entry" in the dashboard.
 export async function ingestSalesforceContract(contract: SfContract): Promise<IngestResult> {
   if (!contract.salesforce_id) {
     return { ingested: false, reason: "contract has no salesforce_id (not synced)" };
@@ -25,6 +32,8 @@ export async function ingestSalesforceContract(contract: SfContract): Promise<In
 
   const existing = await getSessionBySalesforceContractId(contract.salesforce_id);
   if (existing) {
+    // Session already exists. The SF sync worker is read-only against the
+    // existing session — file additions go through the action upload route.
     return { ingested: false, reason: "already-ingested" };
   }
 
@@ -34,13 +43,23 @@ export async function ingestSalesforceContract(contract: SfContract): Promise<In
     return { ingested: false, reason: "no PDF documents attached" };
   }
 
-  const pdfs: { filename: string; buf: ArrayBuffer }[] = [];
+  const pdfs: {
+    filename: string;
+    buf: ArrayBuffer;
+    salesforce_content_document_id?: string | null;
+    salesforce_content_version_id?: string | null;
+  }[] = [];
   for (const doc of pdfDocs) {
     if (!doc.salesforce_content_version_id) {
       return { ingested: false, reason: `document "${doc.filename}" missing content_version_id` };
     }
     const buf = await downloadDocument(contract.local_id, doc.salesforce_content_version_id);
-    pdfs.push({ filename: ensurePdfFilename(doc.filename), buf });
+    pdfs.push({
+      filename: ensurePdfFilename(doc.filename),
+      buf,
+      salesforce_content_document_id: doc.salesforce_content_document_id,
+      salesforce_content_version_id: doc.salesforce_content_version_id,
+    });
   }
 
   const { name: company_name, source: nameSource } = pickCompanyName(contract, pdfs.map((p) => p.filename));

@@ -7,7 +7,15 @@ import { drive } from "./orchestrator";
 import { llamaConfig } from "../config";
 import { uploadFile, createParseJob } from "../llama/client";
 
-export type PdfInput = { filename: string; buf: ArrayBuffer };
+export type PdfInput = {
+  filename: string;
+  buf: ArrayBuffer;
+  // Optional SF identifiers — present when this PDF came from Salesforce
+  // (ingested via /api/salesforce/sync). Carried onto the UploadedFile so
+  // later document-update actions can replace the right Salesforce record.
+  salesforce_content_document_id?: string | null;
+  salesforce_content_version_id?: string | null;
+};
 
 export type SessionMeta = {
   source?: Session["source"];
@@ -39,19 +47,31 @@ export async function createSessionFromPdfBuffers(args: {
 
   // Extract text (unpdf baseline). With LlamaParse enabled we tolerate a baseline
   // failure (image-only PDFs); without it we must succeed here.
-  const extracted: { filename: string; buf: ArrayBuffer; text: string; pageCount: number; language: string }[] = [];
+  const extracted: {
+    filename: string;
+    buf: ArrayBuffer;
+    text: string;
+    pageCount: number;
+    language: string;
+    salesforce_content_document_id?: string | null;
+    salesforce_content_version_id?: string | null;
+  }[] = [];
   for (const file of args.pdfs) {
     if (!file.filename.toLowerCase().endsWith(".pdf")) {
       throw new Error(`Only PDF files are accepted. Rejected: ${file.filename}`);
     }
+    const sfMeta = {
+      salesforce_content_document_id: file.salesforce_content_document_id ?? null,
+      salesforce_content_version_id: file.salesforce_content_version_id ?? null,
+    };
     try {
       const { text, pageCount, language } = await extractPdf(file.buf);
-      extracted.push({ filename: file.filename, buf: file.buf, text, pageCount, language });
+      extracted.push({ filename: file.filename, buf: file.buf, text, pageCount, language, ...sfMeta });
     } catch (e) {
       if (!llamaEnabled) {
         throw new Error(`Failed to read "${file.filename}": ${(e as Error).message}`);
       }
-      extracted.push({ filename: file.filename, buf: file.buf, text: "", pageCount: 0, language: "en" });
+      extracted.push({ filename: file.filename, buf: file.buf, text: "", pageCount: 0, language: "en", ...sfMeta });
     }
   }
 
@@ -71,6 +91,8 @@ export async function createSessionFromPdfBuffers(args: {
       parse_status: llamaEnabled ? "PENDING" : "COMPLETED",
       llama_file_id: null,
       llama_job_id: null,
+      salesforce_content_document_id: e.salesforce_content_document_id ?? null,
+      salesforce_content_version_id: e.salesforce_content_version_id ?? null,
     };
   });
 

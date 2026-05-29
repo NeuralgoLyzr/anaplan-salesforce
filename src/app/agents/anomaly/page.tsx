@@ -7,7 +7,11 @@ import { RecommendedActions } from "@/components/rev-rec/RecommendedActions";
 import type { Session } from "@/lib/rev-rec/types";
 import { getActionItems, getAnomalies } from "@/lib/rev-rec/view";
 
-async function postAction(sessionId: string, actionId: string, decision: "accept" | "reject"): Promise<Session> {
+async function postAction(
+  sessionId: string,
+  actionId: string,
+  decision: "accept" | "reject" | "complete",
+): Promise<Session> {
   const res = await fetch(`/api/companies/${sessionId}/action`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -15,6 +19,42 @@ async function postAction(sessionId: string, actionId: string, decision: "accept
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Action failed");
+  return data.session as Session;
+}
+
+async function postDocumentUpload(
+  sessionId: string,
+  actionId: string,
+  file: File,
+  params: { operation: "add" | "update"; sourceDocId: string | null; triggersRerun: boolean },
+): Promise<{ session: Session; upload_summary?: unknown }> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("action_id", actionId);
+  form.append("operation", params.operation);
+  if (params.sourceDocId) form.append("source_doc_id", params.sourceDocId);
+  form.append("triggers_rerun", String(params.triggersRerun));
+  const res = await fetch(`/api/companies/${sessionId}/document-upload`, {
+    method: "POST",
+    body: form,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Document upload failed");
+  return data as { session: Session; upload_summary?: unknown };
+}
+
+async function postSendEmail(
+  sessionId: string,
+  actionId: string,
+  payload: { to: string; subject: string; body: string },
+): Promise<Session> {
+  const res = await fetch(`/api/companies/${sessionId}/send-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action_id: actionId, ...payload }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Email send failed");
   return data.session as Session;
 }
 
@@ -72,9 +112,29 @@ export default function AnomalyAgentPage() {
         <div className="space-y-3">
           <RecommendedActions
             session={s}
-            onAction={async (actionId, decision) => {
-              await postAction(s.session_id, actionId, decision);
-              refresh();
+            handlers={{
+              decide: async (actionId, decision) => {
+                await postAction(s.session_id, actionId, decision);
+                refresh();
+              },
+              uploadDocument: async (actionId, file, params) => {
+                const r = await postDocumentUpload(s.session_id, actionId, file, params);
+                refresh();
+                return r.upload_summary as
+                  | {
+                      filename: string;
+                      doc_id: string;
+                      operation: "add" | "update";
+                      pushed_to_salesforce: boolean;
+                      triggers_rerun: boolean;
+                      total_files: number;
+                    }
+                  | undefined;
+              },
+              sendEmail: async (actionId, payload) => {
+                await postSendEmail(s.session_id, actionId, payload);
+                refresh();
+              },
             }}
           />
           <AnomalyReview session={s} />

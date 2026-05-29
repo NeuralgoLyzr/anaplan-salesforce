@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Sparkles, ChevronDown, ChevronRight, CheckCircle2, XCircle, Loader2,
-  Mail, CalendarClock, FileText, ClipboardCheck, Database, Circle,
+  Mail, CalendarClock, FileText, ClipboardCheck, Database, Circle, Check,
 } from "lucide-react";
 import type { Session } from "@/lib/rev-rec/types";
 import {
@@ -11,6 +11,8 @@ import {
   type ActionItemView, type ActionCategory,
 } from "@/lib/rev-rec/view";
 import { cn } from "@/lib/utils";
+import { DocumentUploadBox } from "./DocumentUploadBox";
+import { EmailComposeModal } from "./EmailComposeModal";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   mail: Mail, calendar: CalendarClock, file: FileText, review: ClipboardCheck, record: Database, dot: Circle,
@@ -19,18 +21,40 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 function priorityBadge(p: string): { label: string; cls: string } | null {
   if (p === "before_approval") return { label: "Before approval", cls: "bg-amber-500/10 text-amber-600 border-amber-400/20" };
   if (p === "post_approval") return { label: "After approval", cls: "bg-muted/60 text-muted-foreground border-border/50" };
+  if (p === "informational") return { label: "Informational", cls: "bg-sky-500/10 text-sky-600 border-sky-400/20" };
   return null;
+}
+
+// Handler bundle: parent provides everything the actions need to talk to APIs.
+export interface UploadSummary {
+  filename: string;
+  doc_id: string;
+  operation: "add" | "update";
+  pushed_to_salesforce: boolean;
+  triggers_rerun: boolean;
+  total_files: number;
+}
+
+export interface ActionHandlers {
+  // Generic decisions for non-automation actions.
+  decide: (actionId: string, decision: "accept" | "reject" | "complete") => Promise<void>;
+  // Document upload (multipart). Returns a summary so the UI can confirm.
+  uploadDocument: (actionId: string, file: File, params: {
+    operation: "add" | "update";
+    sourceDocId: string | null;
+    triggersRerun: boolean;
+  }) => Promise<UploadSummary | undefined>;
+  // Email send.
+  sendEmail: (actionId: string, payload: { to: string; subject: string; body: string }) => Promise<void>;
 }
 
 interface Props {
   session: Session;
-  onAction: (actionId: string, decision: "accept" | "reject") => Promise<void>;
+  handlers: ActionHandlers;
 }
 
-export function RecommendedActions({ session, onAction }: Props) {
+export function RecommendedActions({ session, handlers }: Props) {
   const { categories, total, blocking } = getActionItems(session);
-
-  // Default-open the first category so the pattern is visible.
   const [openCats, setOpenCats] = useState<Set<string>>(() => new Set(categories[0] ? [categories[0].key] : []));
 
   if (total === 0) return null;
@@ -60,7 +84,7 @@ export function RecommendedActions({ session, onAction }: Props) {
           category={cat}
           open={openCats.has(cat.key)}
           onToggle={() => toggleCat(cat.key)}
-          onAction={onAction}
+          handlers={handlers}
         />
       ))}
     </div>
@@ -68,12 +92,12 @@ export function RecommendedActions({ session, onAction }: Props) {
 }
 
 function CategoryCard({
-  category, open, onToggle, onAction,
+  category, open, onToggle, handlers,
 }: {
   category: ActionCategory;
   open: boolean;
   onToggle: () => void;
-  onAction: (actionId: string, decision: "accept" | "reject") => Promise<void>;
+  handlers: ActionHandlers;
 }) {
   const Icon = ICONS[category.iconKey] ?? Circle;
   return (
@@ -99,7 +123,7 @@ function CategoryCard({
       {open && (
         <div className="px-3 pb-3 space-y-2">
           {category.items.map((item) => (
-            <ActionCard key={item.actionId} item={item} onAction={onAction} />
+            <ActionCard key={item.actionId} item={item} handlers={handlers} />
           ))}
         </div>
       )}
@@ -107,24 +131,50 @@ function CategoryCard({
   );
 }
 
-function ActionCard({
-  item, onAction,
-}: {
-  item: ActionItemView;
-  onAction: (actionId: string, decision: "accept" | "reject") => Promise<void>;
-}) {
+function ActionCard({ item, handlers }: { item: ActionItemView; handlers: ActionHandlers }) {
   const [open, setOpen] = useState(false);
   const [performing, setPerforming] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [uploadSummary, setUploadSummary] = useState<UploadSummary | null>(null);
   const sev = SEVERITY_STYLE[item.severity];
   const prio = priorityBadge(item.priority);
 
-  async function decide(decision: "accept" | "reject") {
+  async function decide(decision: "accept" | "reject" | "complete") {
+    // For send_email actions, "accept" opens the modal — handled by caller.
     try {
-      if (decision === "accept") {
+      if (decision === "accept" || decision === "complete") {
         setPerforming(true);
-        await new Promise((r) => setTimeout(r, 900)); // show the loader — task being performed
+        if (decision === "accept") {
+          // small loader so the UI registers the operation
+          await new Promise((r) => setTimeout(r, 250));
+        }
       }
-      await onAction(item.actionId, decision);
+      await handlers.decide(item.actionId, decision);
+    } finally {
+      setPerforming(false);
+    }
+  }
+
+  async function handleUpload(file: File) {
+    if (!item.uploadParams) return;
+    setPerforming(true);
+    try {
+      const summary = await handlers.uploadDocument(item.actionId, file, {
+        operation: item.uploadParams.operation,
+        sourceDocId: item.uploadParams.source_doc_id,
+        triggersRerun: item.uploadParams.triggers_rerun,
+      });
+      if (summary) setUploadSummary(summary);
+    } finally {
+      setPerforming(false);
+    }
+  }
+
+  async function handleEmailSend(payload: { to: string; subject: string; body: string }) {
+    setPerforming(true);
+    try {
+      await handlers.sendEmail(item.actionId, payload);
+      setEmailOpen(false);
     } finally {
       setPerforming(false);
     }
@@ -133,9 +183,17 @@ function ActionCard({
   const statusPill =
     item.status === "accepted"
       ? { label: "Performed", cls: "bg-emerald-500/10 text-emerald-600 border-emerald-400/20" }
+      : item.status === "completed"
+      ? { label: "Marked complete", cls: "bg-sky-500/10 text-sky-600 border-sky-400/20" }
       : item.status === "rejected"
       ? { label: "Dismissed", cls: "bg-red-500/10 text-red-600 border-red-400/20" }
       : { label: "Pending", cls: "bg-amber-500/10 text-amber-600 border-amber-400/20" };
+
+  // Approve is disabled only when there's an actual upload box rendered (the
+  // user must drop a file to perform the action). Legacy upload-type actions
+  // with no params block fall back to a plain accept.
+  const hasUploadBox = item.kind === "upload_document" && !!item.uploadParams;
+  const acceptDisabled = hasUploadBox;
 
   return (
     <div className="rounded-xl border border-primary/[0.08] bg-background/40 overflow-hidden">
@@ -158,7 +216,6 @@ function ActionCard({
 
       {open && (
         <div className="px-3 pb-3 pt-1 space-y-2.5 border-t border-primary/[0.06]">
-          {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-1.5 pt-2">
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/5 text-primary/70 border border-primary/10">
               {prettyTrigger(item.uiTrigger)}
@@ -189,11 +246,45 @@ function ActionCard({
             </div>
           )}
 
-          {/* Footer: decision / loader / status */}
+          {/* Inline upload area for upload_document actions */}
+          {item.kind === "upload_document" && item.uploadParams && item.status === "pending" && (
+            <DocumentUploadBox
+              operation={item.uploadParams.operation}
+              triggersRerun={item.uploadParams.triggers_rerun}
+              documentName={item.uploadParams.document_name}
+              sourceDocId={item.uploadParams.source_doc_id}
+              busy={performing}
+              onUpload={handleUpload}
+            />
+          )}
+
+          {/* Success banner shown immediately after a file upload completes */}
+          {uploadSummary && (
+            <div className="flex items-start gap-2 rounded-lg border border-emerald-400/30 bg-emerald-500/5 px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="text-[12px] leading-relaxed">
+                <p className="font-medium text-emerald-700">
+                  {uploadSummary.operation === "update" ? "Replaced" : "Added"}{" "}
+                  <span className="font-mono">{uploadSummary.filename}</span>
+                </p>
+                <p className="text-emerald-700/80 text-[11px]">
+                  Session now has <span className="font-semibold">{uploadSummary.total_files} file{uploadSummary.total_files === 1 ? "" : "s"}</span>
+                  {uploadSummary.pushed_to_salesforce && " · synced to Salesforce"}
+                  {uploadSummary.triggers_rerun && " · re-running Reader + Pricing"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Footer: three-button decision row */}
           <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-primary/[0.06]">
-            <p className="text-[11px] text-amber-700/80 flex items-center gap-1">
+            <p className="text-[11px] text-muted-foreground/80 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
-              Accepting will perform this action.
+              {hasUploadBox
+                ? "Upload above to perform; or mark complete / dismiss."
+                : item.kind === "send_email" && item.emailParams
+                ? "Approve opens the email composer."
+                : "Approve will perform this action."}
             </p>
             {performing ? (
               <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
@@ -208,25 +299,60 @@ function ActionCard({
                   <XCircle className="w-3.5 h-3.5" /> Reject
                 </button>
                 <button
-                  onClick={() => decide("accept")}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  onClick={() => decide("complete")}
+                  className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors"
+                  title="Mark as complete without automation"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Accept
+                  <Check className="w-3.5 h-3.5" /> Mark Complete
+                </button>
+                <button
+                  onClick={() => {
+                    if (item.kind === "send_email" && item.emailParams) setEmailOpen(true);
+                    else if (!acceptDisabled) decide("accept");
+                  }}
+                  disabled={acceptDisabled}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg text-white transition-colors",
+                    acceptDisabled ? "bg-emerald-600/40 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"
+                  )}
+                  title={acceptDisabled ? "Upload a file above to approve" : ""}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Approve
                 </button>
               </div>
             ) : (
               <span
                 className={cn(
                   "inline-flex items-center gap-1.5 text-[12px] font-medium",
-                  item.status === "accepted" ? "text-emerald-700" : "text-red-700"
+                  item.status === "accepted" ? "text-emerald-700"
+                  : item.status === "completed" ? "text-sky-700"
+                  : "text-red-700"
                 )}
               >
-                {item.status === "accepted" ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                {item.status === "accepted" ? "Task performed" : "Dismissed"}
+                {item.status === "accepted" ? <CheckCircle2 className="w-4 h-4" />
+                  : item.status === "completed" ? <Check className="w-4 h-4" />
+                  : <XCircle className="w-4 h-4" />}
+                {item.status === "accepted" ? "Task performed"
+                  : item.status === "completed" ? "Marked complete"
+                  : "Dismissed"}
               </span>
             )}
           </div>
         </div>
+      )}
+
+      {/* Email compose modal — rendered only for send_email kinds */}
+      {item.kind === "send_email" && item.emailParams && (
+        <EmailComposeModal
+          open={emailOpen}
+          initialTo={item.emailParams.recipient_email ?? ""}
+          initialSubject={item.emailParams.subject}
+          initialBody={item.emailParams.body}
+          recipientRole={item.emailParams.recipient_role}
+          recipientName={item.emailParams.recipient_name}
+          onClose={() => setEmailOpen(false)}
+          onSend={handleEmailSend}
+        />
       )}
     </div>
   );

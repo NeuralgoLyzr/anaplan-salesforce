@@ -38,10 +38,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       target.status = "paid";
       target.lock_state = "locked";
       target.sent_at = nowIso;
-      // Unlock the next sequenced invoice still scheduled.
+      // Unlock the next still-scheduled invoice. CRITICAL: filter strictly
+      // on status === "scheduled" — NOT on lock_state === "locked", because
+      // paid invoices are also locked. Including them would let this send
+      // revert an earlier paid invoice (lowest-sequence) back to actionable.
       const next = invoices
-        .filter((i) => i.status === "scheduled" || i.lock_state === "locked")
-        .filter((i) => !matchKey(i))
+        .filter((i) => i.status === "scheduled" && !matchKey(i))
         .sort((a, b) => Number(a.sequence ?? 0) - Number(b.sequence ?? 0))[0];
       if (next) {
         next.status = "actionable";
