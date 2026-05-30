@@ -35,6 +35,9 @@ export default function PricingAgentPage() {
         !!(s.agent_outputs.pricing.json || s.agent_outputs.pricing.markdown) ||
         s.status === "gate1"
       }
+      // Pending = revenue plan awaiting Gate 1 approval, OR pricing still
+      // running (so customer is on the way to gate1). Completed = past gate1.
+      isPending={(s) => s.status === "gate1" || s.agent_outputs.pricing.status === "running"}
       emptyHint="No pricing results yet. Customers will appear once Agent 2 completes."
       toolbar={(sessions, refresh) => (
         <BulkApproveButton sessions={sessions} refresh={refresh} />

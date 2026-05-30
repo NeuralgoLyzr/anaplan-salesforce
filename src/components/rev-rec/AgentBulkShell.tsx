@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronDown, ChevronRight, Loader2, RefreshCw, FileText, Cloud,
+  ChevronDown, ChevronRight, Loader2, RefreshCw, FileText, Clock, CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntegratedSystemsCard } from "@/components/integrations/IntegratedSystemsCard";
 import { isBusy, formatDate } from "@/lib/rev-rec/ui";
 import type { Session } from "@/lib/rev-rec/types";
+import { cn } from "@/lib/utils";
 
 export interface AgentBulkShellProps {
   title: string;
@@ -16,6 +17,15 @@ export interface AgentBulkShellProps {
   icon: React.ComponentType<{ className?: string }>;
   // Decide whether a given session has any relevant data to render for this agent.
   hasContent: (session: Session) => boolean;
+  // When provided, a Pending / Completed filter tab is rendered at the top and
+  // sessions are split into the two groups. Returning `true` puts the session
+  // in "Pending action"; `false` puts it in "Completed action". Per-agent
+  // semantics, e.g.:
+  //   Reader  → reader output not yet complete
+  //   Pricing → status === "gate1" (revenue plan awaiting approval)
+  //   Anomaly → at least one action_item still pending
+  //   Bills   → at least one invoice still "actionable"
+  isPending?: (session: Session) => boolean;
   // Optional secondary right-hand element (e.g. a "Bulk approve" button).
   toolbar?: (sessions: Session[], refresh: () => void) => React.ReactNode;
   // Renders the agent-specific body for one customer's session.
@@ -30,11 +40,14 @@ export interface AgentBulkShellProps {
   emptyHint?: string;
 }
 
+type FilterTab = "pending" | "completed";
+
 export function AgentBulkShell(props: AgentBulkShellProps) {
-  const { title, subtitle, icon: HeaderIcon, hasContent, toolbar, renderSession, rowPill, rowSummary, emptyHint } = props;
+  const { title, subtitle, icon: HeaderIcon, hasContent, isPending, toolbar, renderSession, rowPill, rowSummary, emptyHint } = props;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterTab, setFilterTab] = useState<FilterTab>("pending");
 
   const inflight = useRef(false);
   const load = useCallback(async () => {
@@ -74,7 +87,17 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
     return () => clearInterval(t);
   }, [sessions, load]);
 
-  const visible = useMemo(() => sessions.filter(hasContent), [sessions, hasContent]);
+  const allVisible = useMemo(() => sessions.filter(hasContent), [sessions, hasContent]);
+  // Filter-tab partition — only meaningful when isPending is supplied.
+  const pendingCount = useMemo(
+    () => (isPending ? allVisible.filter(isPending).length : 0),
+    [allVisible, isPending],
+  );
+  const completedCount = allVisible.length - pendingCount;
+  const visible = useMemo(() => {
+    if (!isPending) return allVisible;
+    return allVisible.filter((s) => (filterTab === "pending" ? isPending(s) : !isPending(s)));
+  }, [allVisible, isPending, filterTab]);
 
   return (
     <div className="space-y-5 px-4 sm:px-6 py-5 pb-12">
@@ -89,6 +112,11 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
             <h1 className="text-xl font-bold text-foreground tracking-tight">{title}</h1>
             <p className="text-[11px] text-muted-foreground font-medium">
               {subtitle} · {visible.length} customer{visible.length === 1 ? "" : "s"}
+              {isPending && (
+                <span className="text-muted-foreground/70">
+                  {" "}in {filterTab === "pending" ? "pending" : "completed"}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -112,6 +140,28 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
         ]}
       />
 
+      {/* Pending / Completed filter tabs */}
+      {isPending && (
+        <div className="flex items-center gap-1 bg-muted/40 rounded-xl p-1 w-fit">
+          <FilterTabButton
+            active={filterTab === "pending"}
+            label="Pending action"
+            count={pendingCount}
+            icon={Clock}
+            onClick={() => setFilterTab("pending")}
+            activeCls="bg-amber-500/15 text-amber-700 border border-amber-400/30"
+          />
+          <FilterTabButton
+            active={filterTab === "completed"}
+            label="Completed action"
+            count={completedCount}
+            icon={CheckCircle2}
+            onClick={() => setFilterTab("completed")}
+            activeCls="bg-emerald-500/15 text-emerald-700 border border-emerald-400/30"
+          />
+        </div>
+      )}
+
       {error && (
         <div className="glass-card rounded-xl p-4 border border-destructive/20 text-sm text-destructive">
           {error}
@@ -125,9 +175,19 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
         </div>
       ) : visible.length === 0 ? (
         <div className="glass-card rounded-xl p-10 text-center">
-          <p className="text-sm font-medium text-foreground/70">Nothing to show yet</p>
+          <p className="text-sm font-medium text-foreground/70">
+            {isPending
+              ? filterTab === "pending"
+                ? "Nothing pending"
+                : "No completed items yet"
+              : "Nothing to show yet"}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {emptyHint ?? "Customers will appear once the pipeline reaches this agent."}
+            {isPending && filterTab === "pending"
+              ? "All customers on this agent have been actioned."
+              : isPending && filterTab === "completed"
+              ? "Items move here once their action is performed or dismissed."
+              : emptyHint ?? "Customers will appear once the pipeline reaches this agent."}
           </p>
         </div>
       ) : (
@@ -146,6 +206,36 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
         </div>
       )}
     </div>
+  );
+}
+
+function FilterTabButton({
+  active, label, count, icon: Icon, onClick, activeCls,
+}: {
+  active: boolean;
+  label: string;
+  count: number;
+  icon: React.ComponentType<{ className?: string }>;
+  onClick: () => void;
+  activeCls: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all",
+        active ? activeCls : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <Icon className="w-3.5 h-3.5" />
+      {label}
+      <span className={cn(
+        "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+        active ? "bg-background/60" : "bg-muted/60",
+      )}>
+        {count}
+      </span>
+    </button>
   );
 }
 
@@ -178,11 +268,6 @@ function CustomerCollapsible({
         <div className="flex items-center gap-3 min-w-0">
           <span className="flex items-center gap-2 min-w-0">
             <span className="font-semibold text-foreground truncate">{session.company_name}</span>
-            {session.source === "salesforce" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border bg-blue-500/10 text-blue-600 border-blue-400/20">
-                <Cloud className="w-2.5 h-2.5" /> Salesforce
-              </span>
-            )}
           </span>
           {pill}
           <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">

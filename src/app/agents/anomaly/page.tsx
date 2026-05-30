@@ -65,6 +65,13 @@ export default function AnomalyAgentPage() {
       subtitle="Findings & recommended actions"
       icon={IconShieldExclamation}
       hasContent={(s) => s.agent_outputs.anomaly.status !== "pending"}
+      // Pending = at least one recommended action item still awaiting a
+      // decision (not accepted, completed, or rejected). Completed = every
+      // action item has been actioned (or there were none to begin with).
+      isPending={(s) => {
+        const { categories } = getActionItems(s);
+        return categories.some((c) => c.items.some((it) => it.status === "pending"));
+      }}
       emptyHint="No anomaly findings yet."
       rowPill={(s) => {
         // Pending = at least one action item the user hasn't accepted or dismissed.

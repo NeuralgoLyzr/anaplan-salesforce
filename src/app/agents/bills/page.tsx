@@ -56,6 +56,10 @@ export default function BillsAgentPage() {
       subtitle="Actionable & latest invoice per customer"
       icon={IconReceipt}
       hasContent={(s) => s.agent_outputs.billing.status === "complete" || getInvoices(s).length > 0}
+      // Pending = there's at least one invoice still waiting to be sent
+      // ("actionable"). Completed = all invoices have been sent or archived
+      // (no actionable ones left).
+      isPending={(s) => getInvoices(s).some((i) => i.status === "actionable")}
       emptyHint="No bills generated yet. They appear after billing runs."
       toolbar={(sessions, refresh) => (
         <BulkApproveButton sessions={sessions} refresh={refresh} />

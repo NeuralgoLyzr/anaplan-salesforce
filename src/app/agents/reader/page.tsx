@@ -12,6 +12,9 @@ export default function ReaderAgentPage() {
       subtitle="Contract intake — files, pages, and brief"
       icon={IconFileText}
       hasContent={(s) => s.uploaded_files.length > 0 || s.agent_outputs.reader.status !== "pending"}
+      // Pending = the contract brief hasn't been produced yet (parsing,
+      // running, retrying, or failed). Completed = reader output is in place.
+      isPending={(s) => s.agent_outputs.reader.status !== "complete"}
       emptyHint="No customers have uploaded contracts yet."
       rowSummary={(s) => {
         const totalPages = s.uploaded_files.reduce((acc, f) => acc + (f.page_count ?? 0), 0);
