@@ -71,7 +71,7 @@ export function RecommendedActions({ session, handlers }: Props) {
     <div className="rounded-xl border border-primary/15 bg-primary/[0.03] p-3 space-y-2.5">
       <div className="flex items-center gap-2 px-1">
         <Sparkles className="w-4 h-4 text-primary" />
-        <span className="text-sm font-semibold text-foreground">Recommended actions</span>
+        <span className="text-sm font-semibold text-foreground">Anomalies &amp; Actions</span>
         <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{total} action{total === 1 ? "" : "s"}</span>
         {blocking > 0 && (
           <span className="text-[10px] font-medium bg-red-500/10 text-red-600 border border-red-400/20 px-1.5 py-0.5 rounded-full">{blocking} blocking</span>

@@ -2,7 +2,6 @@
 
 import { IconShieldExclamation } from "@tabler/icons-react";
 import { AgentBulkShell } from "@/components/rev-rec/AgentBulkShell";
-import { AnomalyReview } from "@/components/rev-rec/AnomalyReview";
 import { RecommendedActions } from "@/components/rev-rec/RecommendedActions";
 import type { Session } from "@/lib/rev-rec/types";
 import { getActionItems, getAnomalies } from "@/lib/rev-rec/view";
@@ -116,36 +115,33 @@ export default function AnomalyAgentPage() {
         );
       }}
       renderSession={(s, refresh) => (
-        <div className="space-y-3">
-          <RecommendedActions
-            session={s}
-            handlers={{
-              decide: async (actionId, decision) => {
-                await postAction(s.session_id, actionId, decision);
-                refresh();
-              },
-              uploadDocument: async (actionId, file, params) => {
-                const r = await postDocumentUpload(s.session_id, actionId, file, params);
-                refresh();
-                return r.upload_summary as
-                  | {
-                      filename: string;
-                      doc_id: string;
-                      operation: "add" | "update";
-                      pushed_to_salesforce: boolean;
-                      triggers_rerun: boolean;
-                      total_files: number;
-                    }
-                  | undefined;
-              },
-              sendEmail: async (actionId, payload) => {
-                await postSendEmail(s.session_id, actionId, payload);
-                refresh();
-              },
-            }}
-          />
-          <AnomalyReview session={s} />
-        </div>
+        <RecommendedActions
+          session={s}
+          handlers={{
+            decide: async (actionId, decision) => {
+              await postAction(s.session_id, actionId, decision);
+              refresh();
+            },
+            uploadDocument: async (actionId, file, params) => {
+              const r = await postDocumentUpload(s.session_id, actionId, file, params);
+              refresh();
+              return r.upload_summary as
+                | {
+                    filename: string;
+                    doc_id: string;
+                    operation: "add" | "update";
+                    pushed_to_salesforce: boolean;
+                    triggers_rerun: boolean;
+                    total_files: number;
+                  }
+                | undefined;
+            },
+            sendEmail: async (actionId, payload) => {
+              await postSendEmail(s.session_id, actionId, payload);
+              refresh();
+            },
+          }}
+        />
       )}
     />
   );

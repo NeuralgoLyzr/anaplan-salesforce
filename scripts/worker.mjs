@@ -18,11 +18,7 @@ const DRIVE_URL = `${BASE}/api/companies/drive-all`;
 const SYNC_URL = `${BASE}/api/salesforce/sync`;
 const SECRET = process.env.SALESFORCE_SYNC_SECRET;
 const DRIVE_INTERVAL_MS = Number(process.env.DRIVE_INTERVAL_MS ?? 5_000);
-// Salesforce sync is expensive (multiple SOQL queries + document downloads),
-// so we don't run it on the same cadence as drive-all. New contracts being
-// picked up within a few minutes is fine; the pipeline keeps moving for
-// already-ingested ones via drive-all every 5 seconds.
-const SYNC_INTERVAL_MS = Number(process.env.SYNC_INTERVAL_MS ?? 300_000);
+const SYNC_INTERVAL_MS = Number(process.env.SYNC_INTERVAL_MS ?? 20_000);
 // Max time we'll wait for in-flight ticks to drain on SIGTERM before forcing
 // exit. ECS gives the container `stopTimeout` seconds (default 30, max 120)
 // after SIGTERM before SIGKILL; this should be less than that.
@@ -89,8 +85,19 @@ async function syncTick() {
     }
     let body;
     try { body = JSON.parse(text); } catch { body = null; }
-    if (body && (body.ingested > 0 || (body.errors ?? []).length > 0)) {
-      console.log(`[${stamp}] sync pulled=${body.pulled} ingested=${body.ingested} skipped=${body.skipped} errors=${(body.errors ?? []).length} (${Date.now() - started}ms)`);
+    if (body) {
+      const errCount = (body.errors ?? []).length;
+      console.log(`[${stamp}] sync pulled=${body.pulled} ingested=${body.ingested} skipped=${body.skipped} errors=${errCount} (${Date.now() - started}ms)`);
+      for (const d of body.details ?? []) {
+        if (d.outcome?.startsWith("ingested")) {
+          console.log(`[${stamp}]   + ${d.contract_id} ${d.outcome} session=${d.session_id ?? ""}`);
+        } else {
+          console.log(`[${stamp}]   - ${d.contract_id} ${d.outcome}`);
+        }
+      }
+      for (const e of body.errors ?? []) {
+        console.error(`[${stamp}]   ! ${e.contract_id} ${e.message}`);
+      }
     }
   } catch (e) {
     const hint = e.cause?.code === "ECONNREFUSED"

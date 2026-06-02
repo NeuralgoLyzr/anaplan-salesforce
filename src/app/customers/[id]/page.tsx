@@ -4,17 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, FileText, Table2, Receipt, BookOpen, ListChecks,
-  Loader2, AlertTriangle, RefreshCw, ShieldAlert,
+  Loader2, AlertTriangle, RefreshCw, ShieldAlert, Eye,
 } from "lucide-react";
 import { MarkdownPanel } from "@/components/pipeline/MarkdownPanel";
 import { Stepper } from "@/components/rev-rec/Stepper";
 import { Gate1RevenuePlan } from "@/components/rev-rec/Gate1RevenuePlan";
-import { AnomalyReview } from "@/components/rev-rec/AnomalyReview";
 import { RecommendedActions } from "@/components/rev-rec/RecommendedActions";
 import { BillsPanel } from "@/components/rev-rec/BillsPanel";
 import { JournalEntriesPanel } from "@/components/rev-rec/JournalEntriesPanel";
+import { DocumentPreviewModal } from "@/components/rev-rec/DocumentPreviewModal";
 import { IntegratedSystemsCard } from "@/components/integrations/IntegratedSystemsCard";
-import type { Session, SessionStatus } from "@/lib/rev-rec/types";
+import type { Session, SessionStatus, UploadedFile } from "@/lib/rev-rec/types";
 import { RUNNING_LABEL } from "@/lib/rev-rec/types";
 import { STATUS_META, isBusy, formatDate } from "@/lib/rev-rec/ui";
 import { cn } from "@/lib/utils";
@@ -343,13 +343,10 @@ export default function CustomerWorkspace() {
       )}
 
       {tab === "anomaly" && (
-        <div className="space-y-4">
-          <RecommendedActions
-            session={session}
-            handlers={{ decide: action, uploadDocument, sendEmail }}
-          />
-          <AnomalyReview session={session} />
-        </div>
+        <RecommendedActions
+          session={session}
+          handlers={{ decide: action, uploadDocument, sendEmail }}
+        />
       )}
 
       {tab === "bills" && <BillsPanel session={session} onSendInvoice={sendInvoiceEmail} />}
@@ -364,28 +361,53 @@ export default function CustomerWorkspace() {
 function OverviewTab({ session }: { session: Session }) {
   const reader = session.agent_outputs.reader;
   const pricing = session.agent_outputs.pricing;
+  const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
   return (
     <div className="space-y-4">
       {/* Files */}
       <div className="glass-card rounded-xl p-4">
         <p className="text-sm font-semibold text-foreground mb-2">Uploaded documents</p>
         <ul className="space-y-1.5">
-          {session.uploaded_files.map((f) => (
-            <li key={f.doc_id} className="flex items-center gap-2 text-sm">
-              <FileText className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-              <span className="truncate flex-1">{f.filename}</span>
-              {f.parse_status === "RUNNING" && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-sky-600"><Loader2 className="w-3 h-3 animate-spin" />parsing</span>
-              )}
-              {f.parser && f.parse_status !== "RUNNING" && (
-                <span className="text-[10px] text-muted-foreground/70">{f.parser}</span>
-              )}
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{f.doc_type}</span>
-              <span className="text-[11px] text-muted-foreground">{f.page_count}p · {f.language}</span>
-            </li>
-          ))}
+          {session.uploaded_files.map((f) => {
+            const previewable = !!f.salesforce_content_version_id;
+            return (
+              <li
+                key={f.doc_id}
+                className={cn(
+                  "flex items-center gap-2 text-sm rounded-md -mx-2 px-2 py-1 transition-colors",
+                  previewable && "cursor-pointer hover:bg-primary/[0.04] group/file"
+                )}
+                onClick={() => previewable && setPreviewFile(f)}
+                title={previewable ? "Click to preview PDF" : undefined}
+              >
+                <FileText className="w-3.5 h-3.5 text-primary/70 shrink-0" />
+                <span className={cn("truncate flex-1", previewable && "group-hover/file:text-primary")}>
+                  {f.filename}
+                </span>
+                {previewable && (
+                  <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/file:text-primary transition-colors shrink-0" />
+                )}
+                {f.parse_status === "RUNNING" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-sky-600"><Loader2 className="w-3 h-3 animate-spin" />parsing</span>
+                )}
+                {f.parser && f.parse_status !== "RUNNING" && (
+                  <span className="text-[10px] text-muted-foreground/70">{f.parser}</span>
+                )}
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{f.doc_type}</span>
+                <span className="text-[11px] text-muted-foreground">{f.page_count}p · {f.language}</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
+
+      <DocumentPreviewModal
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        sessionId={session.session_id}
+        docId={previewFile?.doc_id ?? ""}
+        filename={previewFile?.filename ?? ""}
+      />
 
       <MarkdownPanel
         icon={FileText}
