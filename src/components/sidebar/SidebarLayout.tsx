@@ -18,7 +18,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
             }
         >
             <AppSidebar variant="sidebar" />
-            <SidebarInset className="overflow-y-auto overflow-x-hidden">
+            <SidebarInset className="app-bg overflow-y-auto overflow-x-hidden">
                 <SiteHeader />
                 {children}
             </SidebarInset>

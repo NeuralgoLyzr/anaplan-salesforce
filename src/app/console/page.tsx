@@ -4,9 +4,9 @@ import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Bot, User, Loader2, Play, Search, AlertCircle, RefreshCw,
-  CheckCircle2, Zap, FileText, FolderOpen, ClipboardList,
-  FileSearch, BarChart3, Sparkles, ChevronDown, ChevronRight,
+  CheckCircle2, Zap, FileText, FolderOpen, ChevronDown, ChevronRight,
   Database, Cpu, X, Plug, Layers, Lock, History,
+  Table2, ShieldAlert, Receipt, ShieldCheck, FileStack,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -231,97 +231,94 @@ function AgentPipelineStream({ events, isStreaming }: { events: ChatEvent[]; isS
 }
 
 const SKILL_JOURNEYS: Record<string, { name: string; icon: React.ComponentType<{ className?: string }>; description: string; steps: { label: string; detail: string }[]; integrations: { name: string; auth: string; actions: string[] }[] }> = {
-  "survey-designer": {
-    name: "Survey Designer",
-    icon: ClipboardList,
-    description: "Generates tailored employee benefit surveys based on engagement type and client context",
+  "reader": {
+    name: "Reader Agent",
+    icon: FileText,
+    description: "Reads the SSA and Order Schedules to work out what's sold, the pricing, the term, and any special terms",
     steps: [
-      { label: "Analyze Context", detail: "Determine engagement type, client industry, workforce demographics" },
-      { label: "Define Dimensions", detail: "Awareness, Utilization, Satisfaction, Gaps, Trade-offs" },
-      { label: "Generate Questions", detail: "15-25 questions with Likert scales, forced-rank, open-text" },
-      { label: "Add Segmentation", detail: "Age, tenure, job family, location, coverage tier" },
-      { label: "Format & Output", detail: "Structured survey with intro, section headers, response formats" },
+      { label: "Extract Documents", detail: "Parse the SSA and each Order Schedule (LlamaParse, unpdf fallback)" },
+      { label: "Classify Each Doc", detail: "Master Subscription Agreement vs Order Schedule" },
+      { label: "Pull Obligations", detail: "SKUs, quantities, performance obligations, term length" },
+      { label: "Capture Special Terms", detail: "OS terms that override or nullify the overarching SSA" },
+      { label: "Output Structured Brief", detail: "Contract brief + JSON for the pricing step" },
     ],
     integrations: [
-      { name: "Gmail", auth: "OAuth 2.0", actions: ["GMAIL_SEND_EMAIL — distribute survey to HR team"] },
-      { name: "Google Sheets", auth: "OAuth 2.0", actions: ["GOOGLESHEETS_GET_SHEET_DATA — import responses"] },
+      { name: "Salesforce", auth: "Bearer Token", actions: ["LIST_CONTRACT_DOCUMENTS — pull executed contract PDFs"] },
+      { name: "LlamaParse", auth: "API Key", actions: ["PARSE_PDF — extract clean contract text"] },
     ],
   },
-  "policy-analyzer": {
-    name: "Policy Analyzer",
-    icon: FileSearch,
-    description: "Analyzes benefits policy documents and produces gap assessment with severity ratings",
+  "pricing": {
+    name: "Pricing Agent",
+    icon: Table2,
+    description: "Splits the total price across each item in the bundle and builds the monthly revenue schedule on the Anaplan model",
     steps: [
-      { label: "Extract Categories", detail: "Medical, Dental, Vision, Life, Disability, Retirement, HSA/FSA, PTO" },
-      { label: "Assess Each Category", detail: "Competitiveness, plan design quality, cost sharing, compliance" },
-      { label: "Benchmark vs Market", detail: "Compare to industry-benchmarks.md median data" },
-      { label: "Flag Compliance Risks", detail: "ACA affordability, ERISA, SECURE 2.0, COBRA" },
-      { label: "Produce Assessment", detail: "Strengths, gaps (Critical/Moderate/Minor), recommendations" },
+      { label: "Load Contract Brief", detail: "Performance obligations and transaction price from the Reader" },
+      { label: "Determine SSP", detail: "Standalone selling price per obligation (list price is rarely on the OS)" },
+      { label: "Allocate Price", detail: "Split the bundle price across each obligation — runs on Anaplan" },
+      { label: "Build Monthly Schedule", detail: "Which month each piece of revenue belongs in, across the term — runs on Anaplan" },
+      { label: "Reconcile Totals", detail: "Allocation and monthly totals tie back to contract value" },
     ],
     integrations: [
-      { name: "Google Drive", auth: "OAuth 2.0", actions: ["GOOGLEDRIVE_LIST_FILES — pull policy docs from client Drive"] },
-      { name: "Notion", auth: "OAuth 2.0", actions: ["NOTION_CREATE_PAGE — sync assessment to workspace"] },
+      { name: "Anaplan MCP", auth: "Bearer Token", actions: ["RUN_ALLOCATION — SSP allocation", "RUN_SCHEDULE — monthly revenue schedule"] },
     ],
   },
-  "competitive-benchmarker": {
-    name: "Competitive Benchmarker",
-    icon: BarChart3,
-    description: "Researches competitor benefits and builds comparison matrix showing market position",
+  "anomaly": {
+    name: "Anomaly Agent",
+    icon: ShieldAlert,
+    description: "Flags unusual terms — odd payment plans or rare promises — for a senior accountant instead of guessing",
     steps: [
-      { label: "Identify Competitors", detail: "3-5 industry peers + cross-industry talent competitors" },
-      { label: "Research Benefits", detail: "Medical, 401(k), PTO, parental leave, unique benefits" },
-      { label: "Build Comparison Matrix", detail: "Client vs Competitor 1-3 vs Industry Median" },
-      { label: "Calculate Position", detail: "Above/At/Below market for each benefit category" },
-      { label: "Identify Trends", detail: "Emerging benefits competitors are adding" },
+      { label: "Compare vs Standard", detail: "Check terms against typical subscription + order-schedule patterns" },
+      { label: "Detect Inconsistencies", detail: "OS terms conflicting with the SSA, non-standard milestones" },
+      { label: "Score Severity", detail: "Critical / High / Medium / Low / Info" },
+      { label: "Recommend Review", detail: "Route anything unusual to a senior accountant" },
+      { label: "Emit Action Items", detail: "Follow-ups (e.g. email sales, request a document)" },
     ],
     integrations: [
-      { name: "Perplexity", auth: "API Key", actions: ["PERPLEXITY_SEARCH — real-time web search for competitor data"] },
+      { name: "Email (SES)", auth: "SMTP", actions: ["SEND_EMAIL — notify the accounting team of a flagged contract"] },
     ],
   },
-  "synthesis-recommender": {
-    name: "Synthesis & Recommend",
-    icon: Sparkles,
-    description: "Combines all workstream outputs into a client-ready recommendation report with 3 scenarios",
+  "billing": {
+    name: "Billing Agent",
+    icon: Receipt,
+    description: "Generates invoices and journal entries from the approved revenue plan, held for the Controller's sign-off before posting",
     steps: [
-      { label: "Load All Workstreams", detail: "Survey results + Policy assessment + Competitive analysis" },
-      { label: "Cross-Reference", detail: "Triple/Double/Single convergence point analysis" },
-      { label: "Build 3 Scenarios", detail: "Conservative (cost-neutral), Moderate (5-15%), Aggressive (15-30%)" },
-      { label: "Model by Persona", detail: "Early career, Mid-career with family, Pre-retirement" },
-      { label: "Generate Report", detail: "Executive summary, data foundation, implementation roadmap" },
+      { label: "Load Approved Plan", detail: "Allocation + monthly schedule approved at Gate 1" },
+      { label: "Generate Invoices", detail: "Right amounts on the right dates across the billing cycle" },
+      { label: "Draft Journal Entries", detail: "Booking rules — e.g. subscription recognized monthly" },
+      { label: "Set Billing Dates", detail: "Update the billing plan so invoices go out on schedule" },
+      { label: "Await Controller", detail: "Nothing posts to the books without human approval (Gate 2)" },
     ],
     integrations: [
-      { name: "Perplexity", auth: "API Key", actions: ["PERPLEXITY_SEARCH — validate against latest market data"] },
-      { name: "Gmail", auth: "OAuth 2.0", actions: ["GMAIL_SEND_EMAIL — send report to client stakeholders"] },
-      { name: "Google Sheets", auth: "OAuth 2.0", actions: ["GOOGLESHEETS_CREATE_SPREADSHEET — export scenario data"] },
+      { name: "Salesforce / QuickBooks", auth: "Bearer Token", actions: ["PUSH_BILLING — send invoices to the billing system"] },
+      { name: "Email (SES)", auth: "SMTP", actions: ["SEND_EMAIL — deliver invoices to the customer"] },
     ],
   },
 };
 
 const KNOWLEDGE_FILES = [
-  "wtw-overview.md", "industry-benchmarks.md", "methodology-discovery.md",
-  "methodology-design.md", "methodology-implementation.md", "methodology-measurement.md", "sample-policy.md",
+  "asc-606-overview.md", "anaplan-model-guide.md", "ssp-allocation-method.md",
+  "revenue-schedule-rules.md", "journal-entry-templates.md", "billing-rules.md", "anomaly-playbook.md",
 ];
 
 const WORKSPACE_FILES = [
-  { name: "engagement-brief.md", client: "meridian-manufacturing" },
-  { name: "policy-assessment.md", client: "meridian-manufacturing" },
-  { name: "employee-survey.md", client: "meridian-manufacturing" },
+  { name: "subscription-ssa.pdf", client: "samples" },
+  { name: "bundled-order-schedule.pdf", client: "samples" },
 ];
 
 const COMPLIANCE_RULES = [
-  { label: "Client data isolated per engagement", type: "guardrail" },
-  { label: "No PII stored in agent memory — aggregates only", type: "privacy" },
-  { label: "ERISA/ACA compliance flags on all recommendations", type: "regulation" },
-  { label: "Actuarial certification required for plan cost models", type: "escalation" },
+  { label: "No journal entry posts without Controller approval", type: "guardrail" },
+  { label: "Every figure traces to a contract line and calc step", type: "audit" },
+  { label: "ASC 606 five-step allocation enforced", type: "regulation" },
+  { label: "Unusual terms escalated to a senior accountant", type: "escalation" },
 ];
 
 // TODO: Replace MOCK_FILE_CONTENT with real API calls to your file storage backend.
 // Fetch file content from your API: GET /api/files?path=<filePath>
 // Then render the markdown content in the prose-agent div below.
 const MOCK_FILE_CONTENT: Record<string, string> = {
-  "wtw-overview.md": "# Overview\n\nConnect your file storage backend to load this document.\n\nReplace `MOCK_FILE_CONTENT` in `console/page.tsx` with a real `fetch` call to your files API.",
-  "industry-benchmarks.md": "# Industry Benchmarks\n\nConnect your data backend to load real benchmark data for your industry and use case.",
-  "sample-policy.md": "# Sample Policy\n\nConnect your document storage to load real policy documents for analysis.",
+  "asc-606-overview.md": "# ASC 606 Overview\n\nConnect your file storage backend to load this document.\n\nReplace `MOCK_FILE_CONTENT` in `console/page.tsx` with a real `fetch` call to your files API.",
+  "anaplan-model-guide.md": "# Anaplan Model Guide\n\nConnect your data backend to load the revenue-recognition model reference (workspace + model IDs, allocation and schedule tools).",
+  "journal-entry-templates.md": "# Journal Entry Templates\n\nConnect your document storage to load the standard booking rules and JE templates.",
 };
 
 function DataFilePreview({ fileName, onClose }: { fileName: string; onClose: () => void }) {
@@ -502,10 +499,10 @@ function AgentConsole() {
   }, [searchParams, sendMessage]);
 
   const quickActions = [
-    { icon: FileSearch, title: "Review Meridian Progress", description: "Check work status and what's pending for Meridian Manufacturing", prompt: "What's the current status of the Meridian Manufacturing engagement? What work has been completed and what still needs to be done?" },
-    { icon: BarChart3, title: "Benchmark Meridian", description: "Competitive benchmarking against talent competitors", prompt: "Run a competitive benchmarking analysis for Meridian Manufacturing. Compare their benefits against Parker Hannifin, Emerson Electric, and other manufacturing competitors." },
-    { icon: Sparkles, title: "Synthesize & Recommend", description: "Combine analysis into recommendation report", prompt: "Synthesize all completed Meridian Manufacturing workstreams into a recommendation report with three cost scenarios." },
-    { icon: ClipboardList, title: "New Client Engagement", description: "Start a fresh total rewards engagement", prompt: "I'm starting a new total rewards engagement for a technology company with 8,000 employees based in Austin, TX. What's the best approach to start?" },
+    { icon: FileText, title: "Summarize a contract", description: "Extract terms, pricing, and obligations from an SSA + order schedule", prompt: "Summarize the key revenue-recognition terms of this contract: what's being sold, the pricing, the term, and any special terms in the order schedule that override the SSA." },
+    { icon: Table2, title: "Explain an allocation", description: "How the bundle price was split across performance obligations", prompt: "Explain how the transaction price was allocated across each performance obligation using standalone selling prices, and how the monthly revenue schedule was built." },
+    { icon: ShieldAlert, title: "Check for unusual terms", description: "Flag anything that needs a senior accountant's review", prompt: "Review this contract for unusual terms — odd payment plans or rare obligations — that could affect revenue recognition and should be escalated." },
+    { icon: Receipt, title: "Draft journal entries", description: "Generate the entries for the approved revenue schedule", prompt: "Draft the journal entries for this contract's monthly revenue schedule, following standard booking rules, ready for Controller approval." },
   ];
 
   useEffect(() => {
@@ -549,7 +546,7 @@ function AgentConsole() {
               <Bot className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-sm">Advisory Agent</h2>
+              <h2 className="font-semibold text-sm">Revenue Recognition Agent</h2>
               <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-pulse" />
                 {isStreaming ? "Processing..." : "Online & Ready"}
@@ -580,9 +577,9 @@ function AgentConsole() {
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary-gradient-end flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
                 <Bot className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">How can I help with your engagement?</h3>
+              <h3 className="text-lg font-semibold text-foreground">How can I help with revenue recognition?</h3>
               <p className="text-sm text-muted-foreground max-w-xl mt-2 mb-8 leading-relaxed">
-                I can design employee surveys, analyze benefits policies, benchmark against competitors, or synthesize recommendations.
+                I can read contracts, allocate and schedule revenue on Anaplan, flag unusual terms, and draft journal entries — all held for your approval.
               </p>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-5xl w-full">
                 {quickActions.map((action) => {
@@ -657,7 +654,7 @@ function AgentConsole() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about benefits design, policy analysis, or competitive benchmarking..."
+              placeholder="Ask about a contract, allocation, schedule, or journal entry..."
               className="flex-1 glass-input rounded-xl px-4 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/40"
               disabled={isStreaming}
             />
@@ -675,7 +672,7 @@ function AgentConsole() {
       </div>
 
       <div className="w-72 flex-shrink-0 glass-card border-l border-black/[0.04] overflow-y-auto p-4 space-y-5 hidden lg:block">
-        <SidebarSection title="Skill Journeys" icon={Zap} iconColor="text-primary" count={Object.keys(SKILL_JOURNEYS).length}>
+        <SidebarSection title="Agent Skills" icon={Zap} iconColor="text-primary" count={Object.keys(SKILL_JOURNEYS).length}>
           <div className="space-y-2">
             {Object.keys(SKILL_JOURNEYS).map((skill) => (
               <SkillJourneyPanel key={skill} skillName={skill} isActive={activeSkillNames.includes(skill)} />
@@ -697,7 +694,7 @@ function AgentConsole() {
           </div>
         </SidebarSection>
 
-        <SidebarSection title="Meridian Workspace" icon={FolderOpen} iconColor="text-warning" count={WORKSPACE_FILES.length}>
+        <SidebarSection title="Sample Contracts" icon={FileStack} iconColor="text-warning" count={WORKSPACE_FILES.length}>
           <div className="space-y-1">
             {WORKSPACE_FILES.map((wsFile) => {
               const isActive = activeFiles.includes(wsFile.name);
@@ -711,7 +708,7 @@ function AgentConsole() {
           </div>
         </SidebarSection>
 
-        <SidebarSection title="Compliance" icon={AlertCircle} iconColor="text-warning" count={COMPLIANCE_RULES.length}>
+        <SidebarSection title="Controls" icon={ShieldCheck} iconColor="text-warning" count={COMPLIANCE_RULES.length}>
           <div className="space-y-1">
             {COMPLIANCE_RULES.map((rule, i) => (
               <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground py-1">
