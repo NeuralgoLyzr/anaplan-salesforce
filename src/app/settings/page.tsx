@@ -65,19 +65,19 @@ export default function SettingsPage() {
   // Local customize form state
   const [form, setForm] = useState({
     name:             "",
-    primaryHex:       "#7B4A24",
-    sidebarHex:       "#2C1E14",
-    accentHex:        "#A65A2C",
-    gradientEndHex:   "#A65A2C",
-    successHex:       "#16A34A",
-    warningHex:       "#F59E0B",
-    errorHex:         "#DC2626",
-    infoHex:          "#0EA5E9",
-    backgroundHex:    "#FAF7F5",
+    primaryHex:       "#3c67ea",
+    sidebarHex:       "#242d48",
+    accentHex:        "#3c67ea",
+    gradientEndHex:   "#1947ba",
+    successHex:       "#14a687",
+    warningHex:       "#ffbb16",
+    errorHex:         "#db3743",
+    infoHex:          "#3c67ea",
+    backgroundHex:    "#f7f8fc",
     cardHex:          "#FFFFFF",
-    borderHex:        "#E7DED4",
-    textPrimaryHex:   "#2E1F16",
-    textSecondaryHex: "#8A7B6C",
+    borderHex:        "#dfe2eb",
+    textPrimaryHex:   "#242d48",
+    textSecondaryHex: "#485478",
     fontFamily:       "Inter" as "Inter" | "Segoe UI" | "Roboto" | "IBM Plex Sans" | "System-UI",
     density:          "comfortable" as "compact" | "comfortable" | "spacious",
     sidebarVariant:   "dark" as "dark" | "light" | "transparent" | "glassmorphic" | "gradient" | "floating",
@@ -644,9 +644,9 @@ export default function SettingsPage() {
             {/* Embedded Shell Header */}
             <div className="px-3.5 py-3 border-b border-black/[0.05] bg-white flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
+                <span className="w-2.5 h-2.5 rounded-full bg-warning" />
+                <span className="w-2.5 h-2.5 rounded-full bg-success" />
                 <span className="text-[10px] text-muted-foreground/60 font-mono ml-2">Console Shell v4.0.0</span>
               </div>
 

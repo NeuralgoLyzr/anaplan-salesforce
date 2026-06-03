@@ -128,7 +128,7 @@ function ApprovalBar({
       <div
         className={cn(
           "flex items-center gap-2 rounded-lg border px-3 py-2 text-[12px]",
-          approved ? "bg-emerald-500/[0.06] border-emerald-400/20 text-emerald-700" : "bg-red-500/[0.06] border-red-400/20 text-red-700"
+          approved ? "bg-success/[0.06] border-success/20 text-success" : "bg-destructive/[0.06] border-destructive/20 text-destructive"
         )}
       >
         {approved ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
@@ -144,7 +144,7 @@ function ApprovalBar({
   return (
     <div className="border-t border-primary/[0.07] pt-3 flex flex-wrap items-center gap-2 justify-end">
       {disabled && disabledReason && (
-        <p className="text-[12px] text-red-600 mr-auto">{disabledReason}</p>
+        <p className="text-[12px] text-destructive mr-auto">{disabledReason}</p>
       )}
       <input
         className="glass-input rounded-lg px-3 py-1.5 text-sm w-full sm:w-48"
@@ -192,7 +192,7 @@ function ReconBadge({ label, ok }: { label: string; ok: boolean | null }) {
     <span
       className={cn(
         "inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border",
-        ok ? "bg-emerald-500/10 text-emerald-600 border-emerald-400/20" : "bg-red-500/10 text-red-600 border-red-400/20"
+        ok ? "bg-success/10 text-success border-success/20" : "bg-destructive/10 text-destructive border-destructive/20"
       )}
     >
       {ok ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}

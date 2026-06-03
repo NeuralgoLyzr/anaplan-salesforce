@@ -32,34 +32,34 @@ const COLUMN_STYLE: Record<string, {
   bg: string; border: string; badge: string; dot: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = {
-  "In Progress":  { bg: "bg-sky-50",     border: "border-sky-200",     badge: "bg-sky-100 text-sky-700",      dot: "bg-sky-500",     icon: Loader2       },
-  "Cancelled":    { bg: "bg-orange-50",   border: "border-orange-200",  badge: "bg-orange-100 text-orange-700", dot: "bg-orange-500",  icon: XCircle       },
-  "Under Review": { bg: "bg-blue-50",     border: "border-blue-200",    badge: "bg-blue-100 text-blue-700",    dot: "bg-blue-500",    icon: Clock         },
-  "Rejected":     { bg: "bg-red-50",      border: "border-red-200",     badge: "bg-red-100 text-red-700",      dot: "bg-red-500",     icon: AlertTriangle },
-  "Approved":     { bg: "bg-amber-50",    border: "border-amber-200",   badge: "bg-amber-100 text-amber-700",  dot: "bg-amber-500",   icon: CheckCircle   },
-  "Done":         { bg: "bg-green-50",    border: "border-green-200",   badge: "bg-green-100 text-green-700",  dot: "bg-green-500",   icon: CheckCircle   },
+  "In Progress":  { bg: "bg-primary/10",     border: "border-primary/30",     badge: "bg-primary/10 text-primary",      dot: "bg-primary",     icon: Loader2       },
+  "Cancelled":    { bg: "bg-warning/10",   border: "border-warning/30",  badge: "bg-warning/10 text-warning", dot: "bg-warning",  icon: XCircle       },
+  "Under Review": { bg: "bg-primary/10",     border: "border-primary/30",    badge: "bg-primary/10 text-primary",    dot: "bg-primary",    icon: Clock         },
+  "Rejected":     { bg: "bg-destructive/10",      border: "border-destructive/30",     badge: "bg-destructive/10 text-destructive",      dot: "bg-destructive",     icon: AlertTriangle },
+  "Approved":     { bg: "bg-warning/10",    border: "border-warning/30",   badge: "bg-warning/10 text-warning",  dot: "bg-warning",   icon: CheckCircle   },
+  "Done":         { bg: "bg-success/10",    border: "border-success/30",   badge: "bg-success/10 text-success",  dot: "bg-success",   icon: CheckCircle   },
 };
 
 // Solid-fill transition buttons — exact EmailSense AI style
 const JIRA_NEXT_STEPS: Record<string, { label: string; status: string; color: string }[]> = {
   "In Progress":  [
-    { label: "Cancel", status: "Cancelled",    color: "bg-orange-500 hover:bg-orange-600 text-white" },
-    { label: "Review", status: "Under Review", color: "bg-blue-600 hover:bg-blue-700 text-white"    },
+    { label: "Cancel", status: "Cancelled",    color: "bg-warning hover:bg-warning text-white" },
+    { label: "Review", status: "Under Review", color: "bg-primary hover:bg-primary text-white"    },
   ],
   "Under Review": [
-    { label: "Reject",  status: "Rejected", color: "bg-red-600 hover:bg-red-700 text-white"    },
-    { label: "Approve", status: "Approved", color: "bg-amber-500 hover:bg-amber-600 text-white" },
+    { label: "Reject",  status: "Rejected", color: "bg-destructive hover:bg-destructive text-white"    },
+    { label: "Approve", status: "Approved", color: "bg-warning hover:bg-warning text-white" },
   ],
-  "Approved":  [{ label: "Done",   status: "Done",        color: "bg-green-600 hover:bg-green-700 text-white" }],
-  "Rejected":  [{ label: "Reopen", status: "In Progress", color: "bg-sky-600 hover:bg-sky-700 text-white"    }],
-  "Cancelled": [{ label: "Reopen", status: "In Progress", color: "bg-sky-600 hover:bg-sky-700 text-white"    }],
+  "Approved":  [{ label: "Done",   status: "Done",        color: "bg-success hover:bg-success text-white" }],
+  "Rejected":  [{ label: "Reopen", status: "In Progress", color: "bg-primary hover:bg-primary text-white"    }],
+  "Cancelled": [{ label: "Reopen", status: "In Progress", color: "bg-primary hover:bg-primary text-white"    }],
 };
 
 const PRIORITY_COLOR: Record<string, string> = {
-  Highest: "text-red-600",
-  High:    "text-orange-500",
-  Medium:  "text-amber-500",
-  Low:     "text-blue-400",
+  Highest: "text-destructive",
+  High:    "text-warning",
+  Medium:  "text-warning",
+  Low:     "text-primary",
   Lowest:  "text-slate-400",
 };
 
@@ -230,19 +230,19 @@ export default function PipelinePage() {
   }
 
   const donutData = [
-    { name: "In Progress",  value: counts.inProgress,  color: "#0ea5e9" },
-    { name: "Cancelled",    value: counts.cancelled,   color: "#f97316" },
-    { name: "Under Review", value: counts.underReview, color: "#3b82f6" },
-    { name: "Rejected",     value: counts.rejected,    color: "#ef4444" },
-    { name: "Approved",     value: counts.approved,    color: "#f59e0b" },
-    { name: "Done",         value: counts.done,        color: "#22c55e" },
+    { name: "In Progress",  value: counts.inProgress,  color: "#3c67ea" },
+    { name: "Cancelled",    value: counts.cancelled,   color: "#909cc0" },
+    { name: "Under Review", value: counts.underReview, color: "#5858e9" },
+    { name: "Rejected",     value: counts.rejected,    color: "#db3743" },
+    { name: "Approved",     value: counts.approved,    color: "#ffbb16" },
+    { name: "Done",         value: counts.done,        color: "#14a687" },
   ].filter(d => d.value > 0);
 
   const summaryCards = [
-    { label: "Under Review", value: counts.underReview, sub: "Awaiting decision",           Icon: Clock,         color: "text-blue-600",   bg: "bg-blue-50",   border: "border-blue-100"   },
-    { label: "Rejected",     value: counts.rejected,    sub: "Blocked issues",               Icon: Ban,           color: "text-red-600",    bg: "bg-red-50",    border: "border-red-100"    },
-    { label: "Approved",     value: counts.approved,    sub: "Ready to send",                Icon: CheckCircle,   color: "text-amber-600",  bg: "bg-amber-50",  border: "border-amber-100"  },
-    { label: "Pass Rate",    value: `${passRate}%`,     sub: `${counts.done} of ${total} done`, Icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50",  border: "border-green-100"  },
+    { label: "Under Review", value: counts.underReview, sub: "Awaiting decision",           Icon: Clock,         color: "text-primary",   bg: "bg-primary/10",   border: "border-primary/30"   },
+    { label: "Rejected",     value: counts.rejected,    sub: "Blocked issues",               Icon: Ban,           color: "text-destructive",    bg: "bg-destructive/10",    border: "border-destructive/30"    },
+    { label: "Approved",     value: counts.approved,    sub: "Ready to send",                Icon: CheckCircle,   color: "text-warning",  bg: "bg-warning/10",  border: "border-warning/30"  },
+    { label: "Pass Rate",    value: `${passRate}%`,     sub: `${counts.done} of ${total} done`, Icon: CheckCircle2, color: "text-success", bg: "bg-success/10",  border: "border-success/30"  },
   ];
 
   return (
@@ -257,14 +257,14 @@ export default function PipelinePage() {
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight">Pipeline</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               <p className="text-[11px] text-muted-foreground font-medium">
                 Live · Project: JIRA · {total} issues
               </p>
             </div>
           </div>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-all">
+        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-warning text-white text-[10px] font-black uppercase tracking-widest hover:bg-warning transition-all">
           <RefreshCw className="w-3 h-3" />
           Sync All
         </button>
@@ -376,7 +376,7 @@ export default function PipelinePage() {
 
       {/* Live badge */}
       <div className="flex items-center justify-center gap-2 py-2">
-        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
           Live data from Jira Cloud · Synced with project pipeline
         </p>

@@ -26,16 +26,16 @@ export interface StatusMeta {
 }
 
 export const STATUS_META: Record<SessionStatus, StatusMeta> = {
-  extracting: { label: "Extracting", pill: "bg-sky-500/10 text-sky-600 border-sky-400/20", busy: true },
-  reading:    { label: "Reading contracts", pill: "bg-sky-500/10 text-sky-600 border-sky-400/20", busy: true },
-  pricing:    { label: "Pricing", pill: "bg-sky-500/10 text-sky-600 border-sky-400/20", busy: true },
-  anomaly:    { label: "Anomaly review", pill: "bg-sky-500/10 text-sky-600 border-sky-400/20", busy: true },
-  gate1:      { label: "Needs approval", pill: "bg-amber-500/10 text-amber-600 border-amber-400/20", busy: false },
-  billing:    { label: "Generating bills", pill: "bg-sky-500/10 text-sky-600 border-sky-400/20", busy: true },
-  gate2:      { label: "Action needed", pill: "bg-amber-500/10 text-amber-600 border-amber-400/20", busy: false },
-  complete:   { label: "Complete", pill: "bg-emerald-500/10 text-emerald-600 border-emerald-400/20", busy: false },
-  rejected:   { label: "Rejected", pill: "bg-red-500/10 text-red-600 border-red-400/20", busy: false },
-  failed:     { label: "Failed", pill: "bg-red-500/10 text-red-600 border-red-400/20", busy: false },
+  extracting: { label: "Extracting", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
+  reading:    { label: "Reading contracts", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
+  pricing:    { label: "Pricing", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
+  anomaly:    { label: "Anomaly review", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
+  gate1:      { label: "Needs approval", pill: "bg-warning/10 text-warning border-warning/20", busy: false },
+  billing:    { label: "Generating bills", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
+  gate2:      { label: "Action needed", pill: "bg-warning/10 text-warning border-warning/20", busy: false },
+  complete:   { label: "Complete", pill: "bg-success/10 text-success border-success/20", busy: false },
+  rejected:   { label: "Rejected", pill: "bg-destructive/10 text-destructive border-destructive/20", busy: false },
+  failed:     { label: "Failed", pill: "bg-destructive/10 text-destructive border-destructive/20", busy: false },
 };
 
 export function isBusy(status: SessionStatus): boolean {

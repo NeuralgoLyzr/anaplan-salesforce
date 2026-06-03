@@ -88,16 +88,16 @@ const NODES: NodeDef[] = [
 
 const NODE_STYLE: Record<Visual, { node: string; icon: string; label: string; sub: string }> = {
   done: {
-    node: "bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/30",
+    node: "bg-success border-success text-white shadow-sm shadow-success/30",
     icon: "text-white",
-    label: "text-emerald-700",
-    sub: "text-emerald-600/70",
+    label: "text-success",
+    sub: "text-success/70",
   },
   active: {
-    node: "bg-sky-500 border-sky-500 text-white shadow-sm shadow-sky-500/40",
+    node: "bg-primary border-primary text-white shadow-sm shadow-primary/40",
     icon: "text-white",
-    label: "text-sky-700",
-    sub: "text-sky-600/70",
+    label: "text-primary",
+    sub: "text-primary/70",
   },
   pending: {
     node: "bg-background border-border text-muted-foreground/50",
@@ -106,10 +106,10 @@ const NODE_STYLE: Record<Visual, { node: string; icon: string; label: string; su
     sub: "text-muted-foreground/40",
   },
   failed: {
-    node: "bg-red-500 border-red-500 text-white shadow-sm shadow-red-500/30",
+    node: "bg-destructive border-destructive text-white shadow-sm shadow-destructive/30",
     icon: "text-white",
-    label: "text-red-700",
-    sub: "text-red-600/70",
+    label: "text-destructive",
+    sub: "text-destructive/70",
   },
 };
 
@@ -117,10 +117,10 @@ const NODE_STYLE: Record<Visual, { node: string; icon: string; label: string; su
 function nodeStyleFor(visual: Visual, kind: NodeDef["kind"]) {
   if (visual === "active" && kind === "gate") {
     return {
-      node: "bg-amber-400 border-amber-400 text-white shadow-sm shadow-amber-400/40",
+      node: "bg-warning border-warning text-white shadow-sm shadow-warning/40",
       icon: "text-white",
-      label: "text-amber-700",
-      sub: "text-amber-600/80",
+      label: "text-warning",
+      sub: "text-warning/80",
     };
   }
   return NODE_STYLE[visual];
@@ -145,7 +145,7 @@ export function Stepper({ session }: { session: Session }) {
         <motion.div
           className={cn(
             "absolute left-0 top-[18px] ml-5 h-[3px] rounded-full",
-            failed ? "bg-gradient-to-r from-emerald-400 to-red-400" : "bg-gradient-to-r from-emerald-400 to-sky-400",
+            failed ? "bg-gradient-to-r from-success to-destructive" : "bg-gradient-to-r from-success to-primary",
           )}
           initial={false}
           animate={{ width: `calc((100% - 2.5rem) * ${fillPct / 100})` }}
@@ -165,7 +165,7 @@ export function Stepper({ session }: { session: Session }) {
                   <span
                     className={cn(
                       "absolute inset-0 rounded-full animate-ping opacity-60",
-                      isGate ? "bg-amber-400/40" : "bg-sky-400/40",
+                      isGate ? "bg-warning/40" : "bg-primary/40",
                     )}
                   />
                 )}

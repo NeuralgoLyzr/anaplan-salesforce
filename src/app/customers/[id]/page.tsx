@@ -215,7 +215,7 @@ export default function CustomerWorkspace() {
     return (
       <div className="px-6 py-10">
         <p className="text-sm text-destructive">{error ?? "Customer not found."}</p>
-        <button onClick={() => router.push("/")} className="text-sm text-primary mt-2">← Back to customers</button>
+        <button onClick={() => router.push("/customers")} className="text-sm text-primary mt-2">← Back to customers</button>
       </div>
     );
   }
@@ -241,7 +241,7 @@ export default function CustomerWorkspace() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/customers")}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -284,7 +284,7 @@ export default function CustomerWorkspace() {
 
       {/* Running banner */}
       {busy && (
-        <div className="flex items-center gap-2 rounded-xl bg-sky-500/10 border border-sky-400/20 px-4 py-2.5 text-[13px] text-sky-700">
+        <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-4 py-2.5 text-[13px] text-primary">
           <Loader2 className="w-4 h-4 animate-spin shrink-0" />
           {RUNNING_LABEL[session.status]}
         </div>
@@ -292,7 +292,7 @@ export default function CustomerWorkspace() {
 
       {/* Failure banner */}
       {session.status === "failed" && (
-        <div className="rounded-xl bg-red-500/10 border border-red-400/20 px-4 py-3 text-[13px] text-red-700">
+        <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-[13px] text-destructive">
           <div className="flex items-center gap-2 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0" /> Pipeline failed
           </div>
@@ -388,7 +388,7 @@ function OverviewTab({ session }: { session: Session }) {
                   <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/file:text-primary transition-colors shrink-0" />
                 )}
                 {f.parse_status === "RUNNING" && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-sky-600"><Loader2 className="w-3 h-3 animate-spin" />parsing</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-primary"><Loader2 className="w-3 h-3 animate-spin" />parsing</span>
                 )}
                 {f.parser && f.parse_status !== "RUNNING" && (
                   <span className="text-[10px] text-muted-foreground/70">{f.parser}</span>
@@ -448,9 +448,9 @@ function AuditTab({ session }: { session: Session }) {
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{key}</p>
               <p className={cn(
                 "text-sm font-medium mt-0.5",
-                out.status === "complete" && "text-emerald-600",
-                out.status === "failed" && "text-red-600",
-                out.status === "running" && "text-sky-600",
+                out.status === "complete" && "text-success",
+                out.status === "failed" && "text-destructive",
+                out.status === "running" && "text-primary",
                 out.status === "pending" && "text-muted-foreground"
               )}>
                 {out.status}
@@ -458,7 +458,7 @@ function AuditTab({ session }: { session: Session }) {
               {out.duration_ms != null && (
                 <p className="text-[11px] text-muted-foreground mt-0.5">{(out.duration_ms / 1000).toFixed(1)}s</p>
               )}
-              {out.error_code && <p className="text-[10px] text-red-600 mt-0.5 font-mono">{out.error_code}</p>}
+              {out.error_code && <p className="text-[10px] text-destructive mt-0.5 font-mono">{out.error_code}</p>}
             </div>
           ))}
         </div>

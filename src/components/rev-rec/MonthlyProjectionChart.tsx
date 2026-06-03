@@ -4,16 +4,16 @@ import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
-// Distinct colors for stacked product bars. Loops if there are more products.
+// ADS chart palette for stacked product bars. Loops if there are more products.
 const PALETTE = [
-  "#6366f1", // indigo
-  "#10b981", // emerald
-  "#f59e0b", // amber
-  "#ef4444", // red
-  "#0ea5e9", // sky
-  "#a855f7", // violet
-  "#14b8a6", // teal
-  "#f43f5e", // rose
+  "#3c67ea", // ADS interactive blue
+  "#00ccb5", // ADS teal
+  "#ffbb16", // ADS amber
+  "#db3743", // ADS red
+  "#1947ba", // ADS dark blue
+  "#14a687", // ADS teal (dark)
+  "#5858e9", // ADS indigo
+  "#909cc0", // ADS slate
 ];
 
 interface Props {

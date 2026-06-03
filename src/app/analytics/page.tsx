@@ -132,7 +132,7 @@ function KpiCard({ kpi }: { kpi: typeof kpis[number] }) {
         </div>
         <span className={cn(
           "flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full",
-          up ? "text-emerald-600 bg-emerald-50" : "text-rose-500 bg-rose-50"
+          up ? "text-success bg-success/10" : "text-destructive bg-destructive/10"
         )}>
           <Trend className="w-3 h-3" />
           {Math.abs(kpi.change)}%
@@ -466,8 +466,8 @@ export default function AnalyticsPage() {
                     trendFilter === f ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {f === "up"   && <TrendingUp   className="w-3 h-3 text-emerald-500" />}
-                  {f === "down" && <TrendingDown  className="w-3 h-3 text-rose-500"    />}
+                  {f === "up"   && <TrendingUp   className="w-3 h-3 text-success" />}
+                  {f === "down" && <TrendingDown  className="w-3 h-3 text-destructive"    />}
                   {f === "all" ? "All" : f === "up" ? "Rising" : "Declining"}
                 </button>
               ))}
@@ -563,7 +563,7 @@ export default function AnalyticsPage() {
                       <td className="px-5 py-3 text-right">
                         <span className={cn(
                           "inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full",
-                          up ? "text-emerald-600 bg-emerald-50" : "text-rose-500 bg-rose-50"
+                          up ? "text-success bg-success/10" : "text-destructive bg-destructive/10"
                         )}>
                           {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                           {Math.abs(row.change)}%

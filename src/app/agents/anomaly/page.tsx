@@ -82,13 +82,13 @@ export default function AnomalyAgentPage() {
         if (pending === 0) return null;
         if (blocking > 0) {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-red-500/10 text-red-600 border-red-400/20">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-destructive/10 text-destructive border-destructive/20">
               Action needed · {blocking} blocking
             </span>
           );
         }
         return (
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-600 border-amber-400/20">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20">
             Action needed
           </span>
         );
@@ -107,7 +107,7 @@ export default function AnomalyAgentPage() {
               </span>
             )}
             {blocking > 0 && (
-              <span className="text-[10px] font-medium bg-red-500/10 text-red-600 border border-red-400/20 px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded-full">
                 {blocking} blocking
               </span>
             )}

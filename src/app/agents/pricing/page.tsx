@@ -50,14 +50,14 @@ export default function PricingAgentPage() {
         const reconBad = recon.allocationMatches === false || recon.monthlyMatches === false;
         if (s.status === "gate1") {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-600 border-amber-400/20">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20">
               Action needed
             </span>
           );
         }
         if (reconBad) {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-red-500/10 text-red-600 border-red-400/20">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-destructive/10 text-destructive border-destructive/20">
               Reconciliation failed
             </span>
           );

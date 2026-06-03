@@ -70,7 +70,7 @@ export function DocumentUploadBox({
                 : "Uploading to Salesforce…"
               : "Click or drop a PDF to attach"}
             {triggersRerun && (
-              <span className="ml-2 inline-flex items-center gap-1 text-amber-600">
+              <span className="ml-2 inline-flex items-center gap-1 text-warning">
                 <RefreshCw className="w-3 h-3" /> will trigger a reader+pricing rerun
               </span>
             )}
@@ -88,7 +88,7 @@ export function DocumentUploadBox({
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
       </div>
-      {err && <p className="text-[11px] text-red-600">{err}</p>}
+      {err && <p className="text-[11px] text-destructive">{err}</p>}
     </div>
   );
 }

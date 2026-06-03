@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# gitagent runtime state (per-run session/memory)
+agent/.gitagent/
