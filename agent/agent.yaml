@@ -1,0 +1,15 @@
+spec_version: "0.1.0"
+name: revrec-copilot
+version: 0.1.0
+description: >
+  Revenue Recognition copilot for the Anaplan × Lyzr workspace. Answers
+  open-ended questions about contracts, ASC 606 allocation, monthly revenue
+  schedules, anomalies, billing and journal entries — and about how to use
+  this app. Read-only: it never posts to the books.
+model:
+  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  fallback: []
+tools:
+  - read
+runtime:
+  max_turns: 24

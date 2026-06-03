@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Info, FileText, ChevronDown, Loader2, AlertTriangle, Cloud, ArrowRight } from "lucide-react";
+import { Info, ChevronDown, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SearchBar, type RevRecAction } from "@/components/dashboard/SearchBar";
 import { InsightRow } from "@/components/dashboard/InsightRow";
-import { STATUS_META, isBusy, formatMoney, type SessionSummary } from "@/lib/rev-rec/ui";
+import { STATUS_META, isBusy, type SessionSummary } from "@/lib/rev-rec/ui";
 import type { DashboardInsight } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -51,14 +51,13 @@ export default function Dashboard() {
     load();
   }, [load]);
 
-  // Keep the dashboard fresh while any contract is still being processed.
   useEffect(() => {
     if (!companies.some((c) => isBusy(c.status))) return;
     const t = setInterval(load, 5000);
     return () => clearInterval(t);
   }, [companies, load]);
 
-  // ─── Derive everything from real pipeline state ──────────────────
+  // ─── Derive insights + the action queue from live pipeline state ────────────
   const derived = useMemo(() => {
     const awaitingApproval = companies.filter((c) => c.status === "gate1" || c.status === "gate2");
     const flagged = companies.filter((c) => (c.anomaly_count ?? 0) > 0);
@@ -68,7 +67,6 @@ export default function Dashboard() {
     const recognized = complete.reduce((s, c) => s + toNumber(c.total_revenue), 0);
     const totalAnomalies = flagged.reduce((s, c) => s + (c.anomaly_count ?? 0), 0);
 
-    // Insights — operational, revenue-recognition specific, derived from live data.
     const insights: DashboardInsight[] = [];
     if (awaitingApproval.length > 0) {
       const g1 = awaitingApproval.filter((c) => c.status === "gate1").length;
@@ -117,7 +115,7 @@ export default function Dashboard() {
         summary: `Executed contracts were picked up automatically and run through the recognition pipeline.`,
         category: "salesforce",
         actionLabel: "View",
-        href: "/",
+        href: "/customers",
       });
     }
     if (complete.length > 0) {
@@ -128,68 +126,34 @@ export default function Dashboard() {
         summary: `${compactMoney(recognized)} in revenue scheduled and posted with a complete, traceable audit trail.`,
         category: "complete",
         actionLabel: "View",
-        href: "/",
+        href: "/customers",
       });
     }
 
-    // Suggested actions — the human-in-the-loop work queue, highest-priority first.
     const actions: RevRecAction[] = [];
     for (const c of awaitingApproval.filter((c) => c.status === "gate1")) {
-      actions.push({
-        company: c.company_name,
-        status: c.status,
-        label: "Approve revenue plan",
-        detail: "Allocation & monthly schedule ready for sign-off",
-        href: `/customers/${c.session_id}`,
-      });
+      actions.push({ company: c.company_name, status: c.status, label: "Approve revenue plan", detail: "Allocation & monthly schedule ready for sign-off", href: `/customers/${c.session_id}` });
     }
     for (const c of awaitingApproval.filter((c) => c.status === "gate2")) {
-      actions.push({
-        company: c.company_name,
-        status: c.status,
-        label: "Review & post journal entries",
-        detail: "Invoices and journal entries awaiting controller approval",
-        href: `/customers/${c.session_id}`,
-      });
+      actions.push({ company: c.company_name, status: c.status, label: "Review & post journal entries", detail: "Invoices and journal entries awaiting controller approval", href: `/customers/${c.session_id}` });
     }
     for (const c of failed) {
-      actions.push({
-        company: c.company_name,
-        status: c.status,
-        label: "Resolve failed pipeline",
-        detail: "Processing stopped — re-run or check the contract",
-        href: `/customers/${c.session_id}`,
-      });
+      actions.push({ company: c.company_name, status: c.status, label: "Resolve failed pipeline", detail: "Processing stopped — re-run or check the contract", href: `/customers/${c.session_id}` });
     }
     for (const c of flagged.filter((c) => !awaitingApproval.includes(c) && c.status !== "failed")) {
-      actions.push({
-        company: c.company_name,
-        status: c.status,
-        label: "Review flagged anomalies",
-        detail: `${c.anomaly_count} unusual term${c.anomaly_count === 1 ? "" : "s"} need a closer look`,
-        href: `/customers/${c.session_id}`,
-      });
+      actions.push({ company: c.company_name, status: c.status, label: "Review flagged anomalies", detail: `${c.anomaly_count} unusual term${c.anomaly_count === 1 ? "" : "s"} need a closer look`, href: `/customers/${c.session_id}` });
     }
 
-    // Active contracts — most recently updated first.
-    const active = [...companies]
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-      .slice(0, 6);
-
-    return { insights, actions: actions.slice(0, 5), active, awaitingApproval };
+    return { insights, actions: actions.slice(0, 6), awaitingApproval };
   }, [companies]);
 
   const displayedInsights = showAllInsights ? derived.insights : derived.insights.slice(0, 3);
   const approvalCount = derived.awaitingApproval.length;
 
   return (
-    <div className="px-4 py-5 sm:px-6 max-w-[1050px] mx-auto space-y-8">
+    <div className="px-4 sm:px-6 pt-20 pb-16 max-w-[1050px] mx-auto space-y-10">
       {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-6rem)]"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center">
         <div className="mb-5 inline-flex flex-col items-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/Anaplan_logo.svg.png" alt="Anaplan" className="h-10 w-auto" />
@@ -207,55 +171,52 @@ export default function Dashboard() {
           anomalies, and held for your approval.
         </p>
         {!loading && approvalCount > 0 && (
-          <p className="mt-3 text-[13px] font-medium text-amber-600">
+          <p className="mt-3 text-[13px] font-medium text-warning">
             {approvalCount} contract{approvalCount === 1 ? "" : "s"} need your sign-off
           </p>
         )}
-        <SearchBar
-          query={query}
-          onChange={setQuery}
-          onSubmit={() => {
-            if (query.trim()) router.push(`/console?q=${encodeURIComponent(query.trim())}`);
-          }}
-          suggestedActions={derived.actions}
-          onActionClick={(href) => router.push(href)}
-        />
+        <SearchBar query={query} onChange={setQuery} onSubmit={() => { if (query.trim()) router.push(`/console?q=${encodeURIComponent(query.trim())}`); }} />
+
+        {/* Integrated systems — inline, no card */}
+        <div className="mt-6 flex items-center justify-center gap-x-6 gap-y-2 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Integrated systems</span>
+          <span className="inline-flex items-center gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Salesforce.com_logo.svg.png" alt="Salesforce" className="h-4 w-auto" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/PLAN-82aa46a2.png" alt="Anaplan" className="h-4 w-auto" />
+            <span className="text-sm font-medium text-foreground">Anaplan MCP</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+          </span>
+        </div>
       </motion.div>
 
-      {/* Insights + Active contracts */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+      {/* Insights + Needs your attention — 50/50 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Insights */}
-        <div className="md:col-span-3 space-y-0">
-          <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5 text-primary" />
             <h2 className="text-sm font-semibold text-foreground">Insights</h2>
             {derived.insights.length > 0 && (
-              <span className="text-[9px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
-                {derived.insights.length}
-              </span>
+              <span className="text-[9px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{derived.insights.length}</span>
             )}
           </div>
           <div className="glass-card rounded-xl p-1">
             {loading ? (
-              <div className="py-10 flex justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              </div>
+              <div className="py-10 flex justify-center"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>
             ) : derived.insights.length === 0 ? (
-              <div className="py-10 text-center">
-                <p className="text-xs text-muted-foreground">No contracts in the pipeline yet.</p>
-              </div>
+              <div className="py-10 text-center"><p className="text-xs text-muted-foreground">No contracts in the pipeline yet.</p></div>
             ) : (
               <>
                 <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-0">
-                  {displayedInsights.map((insight, idx) => (
-                    <InsightRow key={insight.id} insight={insight} index={idx} />
-                  ))}
+                  {displayedInsights.map((insight, idx) => <InsightRow key={insight.id} insight={insight} index={idx} />)}
                 </motion.div>
                 {!showAllInsights && derived.insights.length > 3 && (
-                  <button
-                    onClick={() => setShowAllInsights(true)}
-                    className="w-full py-1 text-[9px] font-medium text-primary hover:text-primary/80 transition-all flex items-center justify-center gap-1"
-                  >
+                  <button onClick={() => setShowAllInsights(true)} className="w-full py-1 text-[9px] font-medium text-primary hover:text-primary/80 transition-all flex items-center justify-center gap-1">
                     Show all {derived.insights.length} insights <ChevronDown className="w-2.5 h-2.5" />
                   </button>
                 )}
@@ -264,79 +225,45 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Active contracts */}
-        <div className="md:col-span-2 space-y-2">
-          <h2 className="text-sm font-semibold flex items-center gap-1.5 text-foreground">
-            <FileText className="w-3.5 h-3.5 text-primary" />
-            Active Contracts
-            {companies.length > 0 && (
-              <span className="text-[9px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
-                {companies.length}
-              </span>
+        {/* Needs your attention */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <ArrowRight className="w-3.5 h-3.5 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Needs your attention</h2>
+            {derived.actions.length > 0 && (
+              <span className="text-[9px] font-medium bg-warning/15 text-warning px-1.5 py-0.5 rounded-full">{derived.actions.length}</span>
             )}
-          </h2>
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-1.5">
+          </div>
+          <div className="glass-card rounded-xl overflow-hidden">
             {loading ? (
-              <div className="glass-card rounded-xl py-10 flex justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              </div>
-            ) : derived.active.length === 0 ? (
-              <button
-                onClick={() => router.push("/")}
-                className="glass-card rounded-xl w-full py-8 text-center hover:bg-white/40 transition-colors"
-              >
-                <p className="text-xs font-medium text-foreground/70">No contracts yet</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Add one to start the pipeline</p>
-              </button>
+              <div className="py-10 flex justify-center"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>
+            ) : derived.actions.length === 0 ? (
+              <div className="py-10 text-center"><p className="text-xs text-muted-foreground">Nothing waiting on you. 🎉</p></div>
             ) : (
-              derived.active.map((c) => {
-                const meta = STATUS_META[c.status];
+              derived.actions.map((action, idx) => {
+                const meta = STATUS_META[action.status];
                 return (
-                  <motion.div
-                    key={c.session_id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => router.push(`/customers/${c.session_id}`)}
-                    className="glass-card rounded-xl p-3 cursor-pointer group"
+                  <div
+                    key={idx}
+                    onClick={() => router.push(action.href)}
+                    className={cn("flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-primary/[0.03] transition-colors cursor-pointer group", idx !== 0 && "border-t border-border/60")}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <h3 className="font-semibold text-foreground text-xs leading-tight truncate">
-                          {c.company_name}
-                        </h3>
-                        {c.source === "salesforce" && (
-                          <Cloud className="w-3 h-3 text-blue-500/70 flex-shrink-0" />
-                        )}
-                      </div>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0",
-                          meta.pill,
-                        )}
-                      >
-                        {meta.busy && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
-                        {meta.label}
-                      </span>
+                    <span className={cn("inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0", meta.pill)}>
+                      {meta.busy && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
+                      {meta.label}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-foreground/80 truncate">
+                        {action.label} for <span className="font-semibold text-foreground">{action.company}</span>
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/70 truncate">{action.detail}</p>
                     </div>
-                    <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-0.5">
-                        <FileText className="w-2.5 h-2.5" />
-                        {c.file_count}
-                      </span>
-                      <span className="font-mono tabular-nums text-foreground/70">{formatMoney(c.total_revenue)}</span>
-                      {(c.anomaly_count ?? 0) > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-amber-600">
-                          <AlertTriangle className="w-2.5 h-2.5" />
-                          {c.anomaly_count}
-                        </span>
-                      )}
-                      <ArrowRight className="w-3 h-3 ml-auto text-primary/0 group-hover:text-primary/50 transition-colors" />
-                    </div>
-                  </motion.div>
+                    <ArrowRight className="w-3.5 h-3.5 text-primary/0 group-hover:text-primary/60 transition-colors flex-shrink-0" />
+                  </div>
                 );
               })
             )}
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

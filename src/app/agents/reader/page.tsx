@@ -40,7 +40,7 @@ export default function ReaderAgentPage() {
                       <FileText className="w-3.5 h-3.5 text-primary/70 shrink-0" />
                       <span className="truncate flex-1">{f.filename}</span>
                       {f.parse_status === "RUNNING" && (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-sky-600">
+                        <span className="inline-flex items-center gap-1 text-[10px] text-primary">
                           <Loader2 className="w-3 h-3 animate-spin" />parsing
                         </span>
                       )}

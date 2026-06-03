@@ -54,9 +54,11 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-  --font-sans: var(--font-sans-custom), var(--font-inter), 'Inter', system-ui, sans-serif;
-  --font-serif: var(--font-heading-custom), var(--font-playfair), 'Playfair Display', Georgia, serif;
-  --font-mono: var(--font-mono-custom), var(--font-jetbrains), 'JetBrains Mono', monospace;
+  /* Anaplan Design System — proxima-nova with the ADS fallback stack.
+     Mulish (free, closest match) renders until a Typekit proxima-nova kit is added. */
+  --font-sans: proxima-nova, var(--font-mulish), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-serif: proxima-nova, var(--font-mulish), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
 
   --color-primary-gradient-start: hsl(var(--primary-gradient-start));
   --color-primary-gradient-end: hsl(var(--primary-gradient-end));
@@ -69,63 +71,68 @@
 }
 
 :root {
-  /* ─── Anaplan-inspired palette ─────────────────────────────────
-     Primary navy #0A2F46, white surfaces, subtle orange accents. */
+  /* ─── Anaplan Design System (ADS) palette ──────────────────────
+     Ported 1:1 from the ADS Storybook build. Navy #242d48 text,
+     interactive blue #3c67ea (pressed #1947ba), teal #14a687,
+     amber #ffbb16, red #db3743, borders #dfe2eb. Small 2–4px radii. */
 
-  --background: 0 0% 100%;            /* white */
-  --foreground: 207 75% 16%;          /* #0A2F46 navy */
+  --background: 0 0% 100%;            /* white surfaces */
+  --foreground: 225 33% 21%;          /* #242d48 navy */
 
   --card: 0 0% 100%;
-  --card-foreground: 207 75% 16%;
+  --card-foreground: 225 33% 21%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 207 75% 16%;
+  --popover-foreground: 225 33% 21%;
 
-  --primary: 207 75% 16%;             /* #0A2F46 */
+  --primary: 225 80% 58%;             /* #3c67ea ADS interactive blue */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 207 45% 35%;
+  --secondary: 225 25% 38%;           /* #485478 slate */
   --secondary-foreground: 0 0% 100%;
 
-  --muted: 210 25% 96%;               /* very light cool gray */
-  --muted-foreground: 210 15% 45%;
+  --muted: 231 30% 95%;               /* #f0f1f7 */
+  --muted-foreground: 225 25% 38%;    /* #485478 */
 
-  /* Accent stays subtle — orange is reserved for highlights / CTAs only */
-  --accent: 207 80% 92%;              /* soft pale blue */
-  --accent-foreground: 207 75% 16%;
+  --accent: 223 56% 94%;              /* #e6ebf8 light blue tint */
+  --accent-foreground: 225 33% 21%;
 
-  --destructive: 0 78% 50%;
+  --destructive: 356 68% 54%;         /* #db3743 */
   --destructive-foreground: 0 0% 100%;
 
-  --success: 152 55% 38%;
+  --success: 167 78% 36%;             /* #14a687 teal */
   --success-foreground: 0 0% 100%;
 
-  /* Anaplan orange — used sparingly for warnings / highlights */
-  --warning: 24 95% 53%;
-  --warning-foreground: 0 0% 100%;
+  --warning: 42 100% 54%;             /* #ffbb16 amber */
+  --warning-foreground: 225 33% 21%;  /* navy text on amber */
 
-  --border: 210 22% 90%;
-  --input: 210 22% 90%;
-  --ring: 207 75% 16%;
+  --border: 225 23% 90%;              /* #dfe2eb */
+  --input: 225 23% 90%;
+  --ring: 225 80% 58%;                /* #3c67ea blue focus */
 
-  --radius: 0.625rem;
+  --radius: 0.25rem;                  /* ADS 4px */
 
-  /* Chart colors — blue family with one orange highlight */
-  --chart-1: 207 75% 16%;             /* primary navy */
-  --chart-2: 205 60% 40%;             /* mid blue */
-  --chart-3: 200 78% 50%;             /* bright blue */
-  --chart-4: 24 95% 53%;              /* Anaplan orange */
-  --chart-5: 210 25% 70%;             /* cool gray-blue */
+  /* Chart colors — ADS palette */
+  --chart-1: 225 80% 58%;             /* blue #3c67ea */
+  --chart-2: 173 100% 40%;            /* teal #00ccb5 */
+  --chart-3: 225 33% 21%;             /* navy #242d48 */
+  --chart-4: 42 100% 54%;             /* amber #ffbb16 */
+  --chart-5: 225 25% 60%;             /* slate */
 
-  /* Sidebar — clean white panel with navy text (matches Anaplan.com chrome) */
-  --sidebar: 210 20% 98%;
-  --sidebar-foreground: 207 60% 22%;
-  --sidebar-primary: 207 75% 16%;
+  /* Sidebar — light panel, ADS navy text + blue accents */
+  --sidebar: 231 30% 98%;
+  --sidebar-foreground: 225 33% 21%;
+  --sidebar-primary: 225 80% 58%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 207 70% 94%;      /* light blue tint on hover/active */
-  --sidebar-accent-foreground: 207 75% 16%;
-  --sidebar-border: 210 22% 90%;
-  --sidebar-ring: 24 95% 53%;         /* orange focus ring */
+  --sidebar-accent: 223 56% 94%;      /* #e6ebf8 */
+  --sidebar-accent-foreground: 225 33% 21%;
+  --sidebar-border: 225 23% 90%;
+  --sidebar-ring: 225 80% 58%;        /* blue focus ring */
+
+  /* Gradient + highlight tokens used by CTA buttons */
+  --primary-gradient-start: 225 80% 58%;  /* #3c67ea */
+  --primary-gradient-end: 223 76% 41%;     /* #1947ba */
+  --accent-highlight: 42 100% 54%;
 }
 
 html {
@@ -140,63 +147,38 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Premium ambient canvas — soft colour blooms on a cool near-white base so the
-   frosted glass surfaces have real colour + depth to refract. No hard grid. */
+/* ADS page canvas — a flat, very light cool-grey surface (#f7f8fc). */
 .app-bg {
-  background-color: hsl(210 33% 98%);
-  background-image:
-    radial-gradient(60rem 40rem at 8% -10%, hsl(var(--primary) / 0.10), transparent 60%),
-    radial-gradient(50rem 36rem at 100% 4%, hsl(200 92% 55% / 0.09), transparent 58%),
-    radial-gradient(56rem 44rem at 92% 108%, hsl(var(--warning) / 0.07), transparent 55%),
-    radial-gradient(46rem 38rem at 20% 112%, hsl(var(--primary) / 0.06), transparent 55%);
-  background-attachment: fixed;
+  background-color: #f7f8fc;
 }
 
 :is(.dark *) .app-bg {
-  background-color: hsl(222 30% 7%);
-  background-image:
-    radial-gradient(60rem 40rem at 8% -10%, hsl(var(--primary) / 0.30), transparent 60%),
-    radial-gradient(50rem 36rem at 100% 4%, hsl(200 92% 55% / 0.14), transparent 58%),
-    radial-gradient(56rem 44rem at 92% 108%, hsl(var(--warning) / 0.10), transparent 55%);
+  background-color: hsl(225 30% 8%);
 }
 
-/* Frosted glass surface — layered fill + hairline edge + soft tinted shadow +
-   an inset top highlight that reads as a light-catching bevel. */
+/* ADS surface card — solid white, #dfe2eb hairline border, 4px radius, the
+   subtle ADS elevation shadow. No glassmorphism (ADS is a flat system). */
 .glass-card {
-  background: linear-gradient(177deg, rgba(255, 255, 255, 0.74) 0%, rgba(255, 255, 255, 0.52) 100%);
-  backdrop-filter: blur(22px) saturate(185%);
-  -webkit-backdrop-filter: blur(22px) saturate(185%);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    0 0 0 1px hsl(207 75% 16% / 0.04),
-    0 1px 2px hsl(207 75% 16% / 0.04),
-    0 14px 36px -16px hsl(207 75% 16% / 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  transition: box-shadow var(--transition-duration, 0.22s) cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+  border: 1px solid #dfe2eb;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px hsl(225 33% 21% / 0.05);
+  transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out;
 }
 
 .glass-card:hover {
-  box-shadow:
-    0 0 0 1px hsl(207 75% 16% / 0.05),
-    0 1px 2px hsl(207 75% 16% / 0.05),
-    0 22px 50px -18px hsl(207 75% 16% / 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  border-color: #b5bdd5;
+  box-shadow: 0 2px 6px hsl(225 33% 21% / 0.08);
 }
 
 :is(.dark *) .glass-card {
-  background: linear-gradient(177deg, rgba(30, 33, 42, 0.78) 0%, rgba(22, 24, 31, 0.62) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 16px 40px -18px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: hsl(225 28% 12%);
+  border: 1px solid hsl(225 20% 22%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 :is(.dark *) .glass-card:hover {
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.5),
-    0 24px 56px -20px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .glass-dark {
@@ -212,11 +194,8 @@ body {
 }
 
 .glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.64) 100%);
-  backdrop-filter: blur(20px) saturate(170%);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 1px 0 hsl(207 75% 16% / 0.05), 0 8px 24px -18px hsl(207 75% 16% / 0.3);
+  background: #fff;
+  border-bottom: 1px solid #dfe2eb;
   transition: all var(--transition-duration, 0.2s) ease;
 }
 
@@ -226,11 +205,9 @@ body {
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 0 1px hsl(207 75% 16% / 0.05), inset 0 1px 2px hsl(207 75% 16% / 0.04);
+  background: #fff;
+  border: 1px solid #dfe2eb;
+  border-radius: 4px;
   transition: all var(--transition-duration, 0.2s) ease;
 }
 

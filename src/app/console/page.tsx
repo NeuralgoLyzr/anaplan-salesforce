@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Bot, User, Loader2, Play, Search, AlertCircle, RefreshCw,
   CheckCircle2, Zap, FileText, FolderOpen, ChevronDown, ChevronRight,
-  Database, Cpu, X, Plug, Layers, Lock, History,
-  Table2, ShieldAlert, Receipt, ShieldCheck, FileStack,
+  Database, Cpu, Plug, Layers, History,
+  Table2, ShieldAlert, Receipt, ShieldCheck,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -42,6 +42,7 @@ function PipelineStepIcon({ type, isActive, isDone }: { type: string; isActive: 
     case "pipeline_start": return <Cpu className={`${size} text-muted-foreground`} />;
     case "llm_start": return <Bot className={`${size} text-primary`} />;
     case "system_read": return <FileText className={`${size} text-muted-foreground`} />;
+    case "tool_call": return <Database className={`${size} text-success`} />;
     default: return <FolderOpen className={`${size} text-muted-foreground`} />;
   }
 }
@@ -56,6 +57,7 @@ function getStepLabel(evt: ChatEvent): string {
 function getStepCategory(evt: ChatEvent): string | null {
   if (evt.type === "phase") return null;
   if (evt.type === "system_read") return evt.meta?.category || "config";
+  if (evt.type === "tool_call") return "integration";
   if (["skill_loading", "skill_detect", "skill_execute", "skill_available"].includes(evt.type)) return "skill";
   if (evt.type === "file_fetch") return evt.meta?.category || "knowledge";
   if (["client_detect", "workspace_scan"].includes(evt.type)) return "workspace";
@@ -69,7 +71,7 @@ const CATEGORY_BG: Record<string, string> = {
   identity: "bg-primary/[0.06]",
   rules: "bg-primary/[0.06]",
   skill: "bg-secondary/[0.08]",
-  knowledge: "bg-blue-500/[0.06]",
+  knowledge: "bg-primary/[0.06]",
   workspace: "bg-warning/[0.06]",
   integration: "bg-success/[0.06]",
   llm: "bg-primary/[0.08]",
@@ -100,10 +102,20 @@ function AgentPipelineStream({ events, isStreaming }: { events: ChatEvent[]; isS
   }, [isDone]);
 
   const pipelineEvents = events.filter((e) => e.type !== "pipeline_start");
-  const phaseEvents = events.filter((e) => e.type === "phase");
   const skillEvents = events.filter((e) => e.type === "skill_loading");
   const fileEvents = events.filter((e) => e.type === "file_fetch");
-  const integrationEvents = events.filter((e) => e.type === "integration_check");
+  const toolEvents = events.filter((e) => e.type === "tool_call");
+  const artifactEvents = events.filter((e) => e.type === "skill_execute");
+
+  // Build an honest summary that reflects every kind of action — including tool
+  // calls (e.g. live MongoDB queries) and artifacts, not just skills/files.
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const summaryParts: string[] = [];
+  if (toolEvents.length) summaryParts.push(plural(toolEvents.length, "tool call", "tool calls"));
+  if (skillEvents.length) summaryParts.push(`${plural(skillEvents.length, "skill", "skills")} read`);
+  if (fileEvents.length) summaryParts.push(`${plural(fileEvents.length, "file", "files")} read`);
+  if (artifactEvents.length) summaryParts.push(plural(artifactEvents.length, "artifact", "artifacts"));
+  const summaryText = summaryParts.length ? summaryParts.join(" · ") : plural(pipelineEvents.length, "step", "steps");
 
   if (isDone && isCollapsed) {
     return (
@@ -115,10 +127,7 @@ function AgentPipelineStream({ events, isStreaming }: { events: ChatEvent[]; isS
       >
         <div className="flex items-center gap-2">
           <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-          <span className="text-xs text-muted-foreground">
-            Pipeline complete: {phaseEvents.length} phases, {skillEvents.length} skills loaded, {fileEvents.length} files read
-            {integrationEvents.length > 0 && `, ${integrationEvents.length} integrations checked`}
-          </span>
+          <span className="text-xs text-muted-foreground">Done · {summaryText}</span>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
         </div>
       </motion.div>
@@ -230,204 +239,12 @@ function AgentPipelineStream({ events, isStreaming }: { events: ChatEvent[]; isS
   );
 }
 
-const SKILL_JOURNEYS: Record<string, { name: string; icon: React.ComponentType<{ className?: string }>; description: string; steps: { label: string; detail: string }[]; integrations: { name: string; auth: string; actions: string[] }[] }> = {
-  "reader": {
-    name: "Reader Agent",
-    icon: FileText,
-    description: "Reads the SSA and Order Schedules to work out what's sold, the pricing, the term, and any special terms",
-    steps: [
-      { label: "Extract Documents", detail: "Parse the SSA and each Order Schedule (LlamaParse, unpdf fallback)" },
-      { label: "Classify Each Doc", detail: "Master Subscription Agreement vs Order Schedule" },
-      { label: "Pull Obligations", detail: "SKUs, quantities, performance obligations, term length" },
-      { label: "Capture Special Terms", detail: "OS terms that override or nullify the overarching SSA" },
-      { label: "Output Structured Brief", detail: "Contract brief + JSON for the pricing step" },
-    ],
-    integrations: [
-      { name: "Salesforce", auth: "Bearer Token", actions: ["LIST_CONTRACT_DOCUMENTS — pull executed contract PDFs"] },
-      { name: "LlamaParse", auth: "API Key", actions: ["PARSE_PDF — extract clean contract text"] },
-    ],
-  },
-  "pricing": {
-    name: "Pricing Agent",
-    icon: Table2,
-    description: "Splits the total price across each item in the bundle and builds the monthly revenue schedule on the Anaplan model",
-    steps: [
-      { label: "Load Contract Brief", detail: "Performance obligations and transaction price from the Reader" },
-      { label: "Determine SSP", detail: "Standalone selling price per obligation (list price is rarely on the OS)" },
-      { label: "Allocate Price", detail: "Split the bundle price across each obligation — runs on Anaplan" },
-      { label: "Build Monthly Schedule", detail: "Which month each piece of revenue belongs in, across the term — runs on Anaplan" },
-      { label: "Reconcile Totals", detail: "Allocation and monthly totals tie back to contract value" },
-    ],
-    integrations: [
-      { name: "Anaplan MCP", auth: "Bearer Token", actions: ["RUN_ALLOCATION — SSP allocation", "RUN_SCHEDULE — monthly revenue schedule"] },
-    ],
-  },
-  "anomaly": {
-    name: "Anomaly Agent",
-    icon: ShieldAlert,
-    description: "Flags unusual terms — odd payment plans or rare promises — for a senior accountant instead of guessing",
-    steps: [
-      { label: "Compare vs Standard", detail: "Check terms against typical subscription + order-schedule patterns" },
-      { label: "Detect Inconsistencies", detail: "OS terms conflicting with the SSA, non-standard milestones" },
-      { label: "Score Severity", detail: "Critical / High / Medium / Low / Info" },
-      { label: "Recommend Review", detail: "Route anything unusual to a senior accountant" },
-      { label: "Emit Action Items", detail: "Follow-ups (e.g. email sales, request a document)" },
-    ],
-    integrations: [
-      { name: "Email (SES)", auth: "SMTP", actions: ["SEND_EMAIL — notify the accounting team of a flagged contract"] },
-    ],
-  },
-  "billing": {
-    name: "Billing Agent",
-    icon: Receipt,
-    description: "Generates invoices and journal entries from the approved revenue plan, held for the Controller's sign-off before posting",
-    steps: [
-      { label: "Load Approved Plan", detail: "Allocation + monthly schedule approved at Gate 1" },
-      { label: "Generate Invoices", detail: "Right amounts on the right dates across the billing cycle" },
-      { label: "Draft Journal Entries", detail: "Booking rules — e.g. subscription recognized monthly" },
-      { label: "Set Billing Dates", detail: "Update the billing plan so invoices go out on schedule" },
-      { label: "Await Controller", detail: "Nothing posts to the books without human approval (Gate 2)" },
-    ],
-    integrations: [
-      { name: "Salesforce / QuickBooks", auth: "Bearer Token", actions: ["PUSH_BILLING — send invoices to the billing system"] },
-      { name: "Email (SES)", auth: "SMTP", actions: ["SEND_EMAIL — deliver invoices to the customer"] },
-    ],
-  },
-};
-
-const KNOWLEDGE_FILES = [
-  "asc-606-overview.md", "anaplan-model-guide.md", "ssp-allocation-method.md",
-  "revenue-schedule-rules.md", "journal-entry-templates.md", "billing-rules.md", "anomaly-playbook.md",
-];
-
-const WORKSPACE_FILES = [
-  { name: "subscription-ssa.pdf", client: "samples" },
-  { name: "bundled-order-schedule.pdf", client: "samples" },
-];
-
 const COMPLIANCE_RULES = [
   { label: "No journal entry posts without Controller approval", type: "guardrail" },
   { label: "Every figure traces to a contract line and calc step", type: "audit" },
   { label: "ASC 606 five-step allocation enforced", type: "regulation" },
   { label: "Unusual terms escalated to a senior accountant", type: "escalation" },
 ];
-
-// TODO: Replace MOCK_FILE_CONTENT with real API calls to your file storage backend.
-// Fetch file content from your API: GET /api/files?path=<filePath>
-// Then render the markdown content in the prose-agent div below.
-const MOCK_FILE_CONTENT: Record<string, string> = {
-  "asc-606-overview.md": "# ASC 606 Overview\n\nConnect your file storage backend to load this document.\n\nReplace `MOCK_FILE_CONTENT` in `console/page.tsx` with a real `fetch` call to your files API.",
-  "anaplan-model-guide.md": "# Anaplan Model Guide\n\nConnect your data backend to load the revenue-recognition model reference (workspace + model IDs, allocation and schedule tools).",
-  "journal-entry-templates.md": "# Journal Entry Templates\n\nConnect your document storage to load the standard booking rules and JE templates.",
-};
-
-function DataFilePreview({ fileName, onClose }: { fileName: string; onClose: () => void }) {
-  const wsFile = WORKSPACE_FILES.find((f) => f.name === fileName);
-  const filePath = wsFile ? `workspace/${wsFile.client}/${fileName}` : `knowledge/docs/${fileName}`;
-  const content = MOCK_FILE_CONTENT[fileName] ?? `# ${fileName}\n\nConnect your file storage backend to load this file.\n\nFile path: \`${filePath}\``;
-  const isLoading = false;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div className="glass-card rounded-2xl shadow-2xl w-[calc(100vw-2rem)] sm:w-[560px] max-h-[65vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <FileText className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">{fileName}</span>
-          </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-black/[0.04] rounded-lg text-muted-foreground transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...
-            </div>
-          ) : (
-            <div className="prose-agent">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function SkillJourneyPanel({ skillName, isActive }: { skillName: string; isActive: boolean }) {
-  const [expanded, setExpanded] = useState(false);
-  const journey = SKILL_JOURNEYS[skillName];
-  if (!journey) return null;
-  const Icon = journey.icon;
-
-  return (
-    <div className={cn("rounded-xl border transition-all duration-200", isActive ? "border-primary/20 bg-primary/[0.04]" : "border-black/[0.04] bg-white/30")}>
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left">
-        <div className={cn("p-1.5 rounded-lg", isActive ? "bg-primary/10" : "bg-black/[0.04]")}>
-          <Icon className={cn("w-3.5 h-3.5", isActive ? "text-primary" : "text-muted-foreground")} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <span className={cn("text-xs font-semibold block truncate", isActive ? "text-primary" : "text-foreground")}>{journey.name}</span>
-          <span className="text-[10px] text-muted-foreground/60 block truncate">{journey.description.slice(0, 50)}...</span>
-        </div>
-        {isActive && <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse flex-shrink-0" />}
-        <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/50 transition-transform flex-shrink-0", expanded ? "rotate-0" : "-rotate-90")} />
-      </button>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
-            <div className="px-3.5 pb-3.5 space-y-2.5">
-              <div className="space-y-1">
-                {journey.steps.map((step, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center text-[8px] font-bold", isActive ? "border-primary/30 text-primary/60" : "border-black/[0.08] text-muted-foreground/40")}>
-                        {i + 1}
-                      </div>
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[11px] font-medium text-foreground block">{step.label}</span>
-                      <span className="text-[10px] text-muted-foreground/60 block leading-snug">{step.detail}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {journey.integrations.length > 0 && (
-                <div className="pt-2 border-t border-black/[0.04]">
-                  <span className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-wider">Composio MCP Actions</span>
-                  <div className="mt-1 space-y-1">
-                    {journey.integrations.map((intg, i) => (
-                      <div key={i} className="rounded-lg bg-black/[0.02] border border-black/[0.04] px-2.5 py-1.5">
-                        <div className="flex items-center gap-1.5 text-[10px]">
-                          <Plug className="w-2.5 h-2.5 text-success/60 flex-shrink-0" />
-                          <span className="font-medium text-foreground">{intg.name}</span>
-                          <span className="text-muted-foreground/40">·</span>
-                          <Lock className="w-2 h-2 text-muted-foreground/40" />
-                          <span className="text-muted-foreground/50 text-[9px]">{intg.auth}</span>
-                        </div>
-                        {intg.actions.map((action, ai) => (
-                          <div key={ai} className="text-[9px] text-muted-foreground/50 font-mono mt-0.5 pl-4">{action}</div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function SidebarSection({ title, icon: Icon, iconColor, count, children }: { title: string; icon: React.ComponentType<{ className?: string }>; iconColor: string; count: number; children: React.ReactNode }) {
   const [expanded, setExpanded] = useState(true);
@@ -451,12 +268,27 @@ function SidebarSection({ title, icon: Icon, iconColor, count, children }: { tit
 }
 
 function AgentConsole() {
-  const { messages, setMessages, isStreaming, activeEvents, activeFiles, detectedSkills, detectedClient, sendMessage, stopStream, resetChat } = useChatStream();
+  const { messages, setMessages, isStreaming, activeEvents, activeFiles, detectedSkills, detectedClient, artifacts, sendMessage, stopStream, resetChat } = useChatStream();
   const { sessions, saveSession, deleteSession, clearAllSessions } = useChatHistory();
   const [input, setInput] = useState("");
-  const [previewFile, setPreviewFile] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [manifest, setManifest] = useState<{ skills: { id: string; name: string; description: string }[]; knowledge: string[] }>({ skills: [], knowledge: [] });
+  const [openArtifact, setOpenArtifact] = useState<number>(0);
+
+  // Load the agent's real skills + knowledge files (the version-controlled
+  // gitagent repo) for the right rail.
+  useEffect(() => {
+    fetch("/api/agent/manifest")
+      .then((r) => r.json())
+      .then((d) => setManifest({ skills: d.skills ?? [], knowledge: d.knowledge ?? [] }))
+      .catch(() => {});
+  }, []);
+
+  // Keep the latest artifact in focus as new ones stream in.
+  useEffect(() => {
+    if (artifacts.length > 0) setOpenArtifact(artifacts.length - 1);
+  }, [artifacts.length]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialSentRef = useRef(false);
   const prevStreamingRef = useRef(false);
@@ -521,14 +353,9 @@ function AgentConsole() {
     sendMessage(action);
   };
 
-  const activeSkillNames = detectedSkills.length > 0 ? detectedSkills : Object.keys(SKILL_JOURNEYS);
 
   return (
-    <div className="flex h-[calc(100vh-3rem)]">
-      <AnimatePresence>
-        {previewFile && <DataFilePreview fileName={previewFile} onClose={() => setPreviewFile(null)} />}
-      </AnimatePresence>
-
+    <div className="flex h-full">
       <ChatHistoryDrawer
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
@@ -571,7 +398,7 @@ function AgentConsole() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-5 space-y-4">
           {messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary-gradient-end flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
@@ -581,7 +408,7 @@ function AgentConsole() {
               <p className="text-sm text-muted-foreground max-w-xl mt-2 mb-8 leading-relaxed">
                 I can read contracts, allocate and schedule revenue on Anaplan, flag unusual terms, and draft journal entries — all held for your approval.
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-5xl w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                 {quickActions.map((action) => {
                   const Icon = action.icon;
                   return (
@@ -671,37 +498,85 @@ function AgentConsole() {
         </div>
       </div>
 
-      <div className="w-72 flex-shrink-0 glass-card border-l border-black/[0.04] overflow-y-auto p-4 space-y-5 hidden lg:block">
-        <SidebarSection title="Agent Skills" icon={Zap} iconColor="text-primary" count={Object.keys(SKILL_JOURNEYS).length}>
-          <div className="space-y-2">
-            {Object.keys(SKILL_JOURNEYS).map((skill) => (
-              <SkillJourneyPanel key={skill} skillName={skill} isActive={activeSkillNames.includes(skill)} />
-            ))}
+      {/* Artifacts panel — Claude-workspace style. Appears when the agent
+          produces a deliverable via the create_artifact tool. */}
+      {artifacts.length > 0 && (
+        <div className="w-[420px] flex-shrink-0 glass-card border-l border-black/[0.04] flex flex-col hidden md:flex">
+          <div className="h-12 px-4 flex items-center justify-between border-b border-black/[0.05]">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Artifacts</span>
+              <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{artifacts.length}</span>
+            </div>
           </div>
-        </SidebarSection>
+          {artifacts.length > 1 && (
+            <div className="flex gap-1 px-3 py-2 border-b border-black/[0.04] overflow-x-auto">
+              {artifacts.map((a, i) => (
+                <button
+                  key={a.id}
+                  onClick={() => setOpenArtifact(i)}
+                  className={cn(
+                    "text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors",
+                    i === openArtifact ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-black/[0.04]",
+                  )}
+                >
+                  {a.title}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex-1 overflow-y-auto p-5">
+            {artifacts[openArtifact] && (
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground bg-black/[0.04] px-1.5 py-0.5 rounded">
+                    {artifacts[openArtifact].kind}
+                  </span>
+                  <h3 className="text-sm font-semibold text-foreground">{artifacts[openArtifact].title}</h3>
+                </div>
+                <div className="prose-agent">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{artifacts[openArtifact].content}</ReactMarkdown>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
-        <SidebarSection title="Knowledge Base" icon={Database} iconColor="text-primary" count={KNOWLEDGE_FILES.length}>
-          <div className="space-y-1">
-            {KNOWLEDGE_FILES.map((file) => {
-              const isActive = activeFiles.includes(file);
+      <div className="w-72 flex-shrink-0 glass-card border-l border-black/[0.04] overflow-y-auto p-4 space-y-5 hidden lg:block">
+        <SidebarSection title="Agent Skills" icon={Zap} iconColor="text-primary" count={manifest.skills.length}>
+          <div className="space-y-1.5">
+            {manifest.skills.map((skill) => {
+              const isActive = detectedSkills.includes(skill.id);
               return (
-                <div key={file} onClick={() => setPreviewFile(file)} className={cn("flex items-center gap-2 text-xs px-3 py-2 rounded-lg border transition-all cursor-pointer hover:border-primary/30", isActive ? "text-primary border-primary/20 bg-primary/[0.05] font-medium" : "text-muted-foreground border-black/[0.04] bg-white/20 hover:text-foreground")}>
-                  <FileText className={cn("w-3 h-3 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground/40")} />
-                  <span className="font-mono truncate text-[11px]">{file}</span>
+                <div
+                  key={skill.id}
+                  title={skill.description}
+                  className={cn(
+                    "px-3 py-2 rounded-lg border transition-all",
+                    isActive
+                      ? "text-primary border-primary/25 bg-primary/[0.06] font-medium shadow-sm"
+                      : "text-muted-foreground border-black/[0.04] bg-white/20",
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    {isActive ? <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0" /> : <Zap className="w-3 h-3 text-muted-foreground/40 flex-shrink-0" />}
+                    <span className="font-mono text-[11px] truncate">{skill.name}</span>
+                  </div>
                 </div>
               );
             })}
           </div>
         </SidebarSection>
 
-        <SidebarSection title="Sample Contracts" icon={FileStack} iconColor="text-warning" count={WORKSPACE_FILES.length}>
+        <SidebarSection title="Knowledge Base" icon={Database} iconColor="text-primary" count={manifest.knowledge.length}>
           <div className="space-y-1">
-            {WORKSPACE_FILES.map((wsFile) => {
-              const isActive = activeFiles.includes(wsFile.name);
+            {manifest.knowledge.map((file) => {
+              const isActive = activeFiles.includes(file);
               return (
-                <div key={wsFile.name} onClick={() => setPreviewFile(wsFile.name)} className={cn("flex items-center gap-2 text-xs px-3 py-2 rounded-lg border transition-all cursor-pointer hover:border-primary/30", isActive ? "text-primary border-primary/20 bg-primary/[0.05] font-medium" : "text-muted-foreground border-warning/30 bg-warning/[0.03] hover:text-foreground")}>
-                  <FolderOpen className={cn("w-3 h-3 flex-shrink-0", isActive ? "text-primary" : "text-warning/40")} />
-                  <span className="font-mono truncate text-[11px]">{wsFile.name}</span>
+                <div key={file} className={cn("flex items-center gap-2 text-xs px-3 py-2 rounded-lg border transition-all", isActive ? "text-primary border-primary/20 bg-primary/[0.05] font-medium" : "text-muted-foreground border-black/[0.04] bg-white/20")}>
+                  <FileText className={cn("w-3 h-3 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground/40")} />
+                  <span className="font-mono truncate text-[11px]">{file}</span>
                 </div>
               );
             })}
@@ -725,7 +600,7 @@ function AgentConsole() {
 
 export default function ConsolePage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-full items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
       <AgentConsole />
     </Suspense>
   );

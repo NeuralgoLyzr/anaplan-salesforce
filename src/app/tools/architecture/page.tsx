@@ -22,8 +22,8 @@ const ARCHITECTURE_LAYERS = [
   {
     title: "Knowledge Base",
     icon: Database,
-    color: "text-blue-600",
-    bg: "bg-blue-500/10",
+    color: "text-primary",
+    bg: "bg-primary/10",
     files: ["wtw-overview.md", "industry-benchmarks.md", "methodology-*.md"],
     description: "Static domain knowledge injected as context — firm methodology, benchmarks, and reference data.",
   },

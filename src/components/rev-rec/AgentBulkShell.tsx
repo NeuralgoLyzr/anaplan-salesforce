@@ -149,7 +149,7 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
             count={pendingCount}
             icon={Clock}
             onClick={() => setFilterTab("pending")}
-            activeCls="bg-amber-500/15 text-amber-700 border border-amber-400/30"
+            activeCls="bg-warning/15 text-warning border border-warning/30"
           />
           <FilterTabButton
             active={filterTab === "completed"}
@@ -157,7 +157,7 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
             count={completedCount}
             icon={CheckCircle2}
             onClick={() => setFilterTab("completed")}
-            activeCls="bg-emerald-500/15 text-emerald-700 border border-emerald-400/30"
+            activeCls="bg-success/15 text-success border border-success/30"
           />
         </div>
       )}

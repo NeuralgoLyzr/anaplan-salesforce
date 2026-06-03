@@ -48,14 +48,14 @@ export function JournalEntriesPanel({ session, busy, onPost }: Props) {
               {entries.length} entr{entries.length === 1 ? "y" : "ies"} ·
               {" "}DR <span className="font-mono">{fmt(totals.dr)}</span>
               {" "}CR <span className="font-mono">{fmt(totals.cr)}</span>
-              {" "}<span className={cn("font-medium", balanced ? "text-emerald-600" : "text-red-600")}>
+              {" "}<span className={cn("font-medium", balanced ? "text-success" : "text-destructive")}>
                 {balanced ? "balanced" : "unbalanced"}
               </span>
             </p>
           </div>
         </div>
         {posted ? (
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-700 border border-emerald-400/20">
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-success/10 text-success border border-success/20">
             <CheckCircle2 className="w-4 h-4" /> Posted
           </span>
         ) : (
@@ -91,7 +91,7 @@ function JEEntry({ e }: { e: JournalEntry }) {
           )}
           <span className={cn(
             "text-[10px] font-medium px-1.5 py-0.5 rounded-full border",
-            balanced ? "bg-emerald-500/10 text-emerald-600 border-emerald-400/20" : "bg-red-500/10 text-red-600 border-red-400/20",
+            balanced ? "bg-success/10 text-success border-success/20" : "bg-destructive/10 text-destructive border-destructive/20",
           )}>
             {balanced ? "Balanced" : "Unbalanced"}
           </span>

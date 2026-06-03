@@ -30,11 +30,11 @@ interface Props {
 }
 
 const STATUS_PILL: Record<InvoiceStatus, { label: string; cls: string; Icon: React.ComponentType<{ className?: string }> }> = {
-  actionable: { label: "Actionable", cls: "bg-amber-500/10 text-amber-600 border-amber-400/20", Icon: Send },
+  actionable: { label: "Actionable", cls: "bg-warning/10 text-warning border-warning/20", Icon: Send },
   scheduled:  { label: "Scheduled",  cls: "bg-slate-400/10 text-slate-500 border-slate-300/30", Icon: Clock },
-  paid:       { label: "Sent",       cls: "bg-emerald-500/10 text-emerald-600 border-emerald-400/20", Icon: CheckCircle2 },
-  archived:   { label: "Archived",   cls: "bg-red-500/10 text-red-600 border-red-400/20", Icon: XCircle },
-  rejected:   { label: "Rejected",   cls: "bg-red-500/10 text-red-600 border-red-400/20", Icon: XCircle },
+  paid:       { label: "Sent",       cls: "bg-success/10 text-success border-success/20", Icon: CheckCircle2 },
+  archived:   { label: "Archived",   cls: "bg-destructive/10 text-destructive border-destructive/20", Icon: XCircle },
+  rejected:   { label: "Rejected",   cls: "bg-destructive/10 text-destructive border-destructive/20", Icon: XCircle },
 };
 
 export function BillsPanel({ session, onSendInvoice }: Props) {

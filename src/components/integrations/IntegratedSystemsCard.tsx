@@ -37,7 +37,7 @@ export function IntegratedSystemsCard({
             key={tool.id}
             className={cn(
               "flex items-center gap-2 px-3 py-2 rounded-full border bg-background/40 backdrop-blur shrink-0",
-              tool.connected ? "border-emerald-500/20" : "border-muted-foreground/15"
+              tool.connected ? "border-success/20" : "border-muted-foreground/15"
             )}
             title={tool.name}
           >
@@ -51,7 +51,7 @@ export function IntegratedSystemsCard({
               {tool.name}
             </span>
             {tool.connected ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-success" />
             ) : (
               <XCircle className="w-4 h-4 text-muted-foreground/50" />
             )}

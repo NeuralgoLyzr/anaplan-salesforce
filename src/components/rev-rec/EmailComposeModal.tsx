@@ -137,12 +137,12 @@ export function EmailComposeModal({
 
         <div className="px-5 py-4 space-y-3">
           {/* Two reminders the user must action before sending. */}
-          <div className="rounded-lg border border-amber-400/30 bg-amber-500/5 px-3 py-2.5">
+          <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2.5">
             <div className="flex items-start gap-2">
-              <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+              <Info className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-amber-700">Before you send</p>
-                <ul className="space-y-1 text-[11px] text-amber-700/90">
+                <p className="text-[11px] font-semibold text-warning">Before you send</p>
+                <ul className="space-y-1 text-[11px] text-warning/90">
                   <li className="flex items-start gap-1.5">
                     <AtSign className="w-3 h-3 mt-0.5 shrink-0" />
                     <span>
@@ -152,7 +152,7 @@ export function EmailComposeModal({
                   <li className="flex items-start gap-1.5">
                     <User className="w-3 h-3 mt-0.5 shrink-0" />
                     <span>
-                      Replace <code className="font-mono bg-amber-500/10 px-1 rounded">[Your name]</code> at the end of the body with your actual name before sending.
+                      Replace <code className="font-mono bg-warning/10 px-1 rounded">[Your name]</code> at the end of the body with your actual name before sending.
                     </span>
                   </li>
                 </ul>
@@ -189,9 +189,9 @@ export function EmailComposeModal({
               className="w-full px-3 py-2 rounded-lg border border-primary/15 bg-background text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             {/Your name/i.test(body) && (
-              <p className="mt-1 text-[11px] text-amber-700 flex items-center gap-1">
+              <p className="mt-1 text-[11px] text-warning flex items-center gap-1">
                 <User className="w-3 h-3" />
-                The body still contains <code className="font-mono bg-amber-500/10 px-1 rounded">[Your name]</code> — replace it with your name before sending.
+                The body still contains <code className="font-mono bg-warning/10 px-1 rounded">[Your name]</code> — replace it with your name before sending.
               </p>
             )}
           </div>
@@ -202,8 +202,8 @@ export function EmailComposeModal({
                 <Paperclip className="w-3 h-3" /> Attachment
               </label>
               <div className="rounded-lg border border-primary/15 bg-primary/[0.03] px-3 py-2 flex items-center gap-3">
-                <div className="w-9 h-10 rounded-md bg-red-500/10 border border-red-400/20 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-red-500" />
+                <div className="w-9 h-10 rounded-md bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-destructive" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[12px] font-medium text-foreground truncate">{attachment.filename}</p>
@@ -229,7 +229,7 @@ export function EmailComposeModal({
             </div>
           )}
 
-          {err && <p className="text-[12px] text-red-600">{err}</p>}
+          {err && <p className="text-[12px] text-destructive">{err}</p>}
         </div>
 
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-primary/10 bg-muted/20">
@@ -245,7 +245,7 @@ export function EmailComposeModal({
             disabled={busy}
             className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white",
-              busy ? "bg-emerald-500/70" : "bg-emerald-600 hover:bg-emerald-700"
+              busy ? "bg-success/70" : "bg-success hover:bg-success"
             )}
           >
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}

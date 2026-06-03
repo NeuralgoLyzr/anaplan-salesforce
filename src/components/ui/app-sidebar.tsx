@@ -10,6 +10,7 @@ import {
     IconCoin,
     IconShieldExclamation,
     IconReceipt,
+    IconAdjustments,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/ui/nav-main"
@@ -33,9 +34,10 @@ const data = {
         avatar: "/avatars/shadcn.jpg",
     },
     navTop: [
-        { title: "Dashboard",     url: "/dashboard", icon: IconDashboard     },
-        { title: "Agent Console", url: "/console",   icon: IconTerminal2     },
-        { title: "Customers",     url: "/",          icon: IconBuildingBank  },
+        { title: "Dashboard",     url: "/dashboard",     icon: IconDashboard     },
+        { title: "Agent Console", url: "/console",       icon: IconTerminal2     },
+        { title: "Customers",     url: "/customers",     icon: IconBuildingBank  },
+        { title: "Configuration", url: "/agents/config", icon: IconAdjustments   },
     ],
     navAgents: [
         {
@@ -57,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader>
-                <Link href="/" className="flex flex-col items-start gap-1 px-3 py-3">
+                <Link href="/dashboard" className="flex flex-col items-start gap-1 px-3 py-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/Anaplan_logo.svg.png"

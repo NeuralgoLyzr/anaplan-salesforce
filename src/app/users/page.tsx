@@ -30,7 +30,7 @@ const ROLE_CONFIG: Record<Role, {
   border: string;
 }> = {
   Admin:  { label: "Admin",  icon: Crown,  color: "text-primary",         bg: "bg-primary/10",   border: "border-primary/20"  },
-  Editor: { label: "Editor", icon: Edit3,  color: "text-blue-600",        bg: "bg-blue-500/10",  border: "border-blue-500/20" },
+  Editor: { label: "Editor", icon: Edit3,  color: "text-primary",        bg: "bg-primary/10",  border: "border-primary/20" },
   Viewer: { label: "Viewer", icon: Eye,    color: "text-muted-foreground", bg: "bg-black/[0.04]", border: "border-black/[0.08]" },
 };
 
@@ -175,7 +175,7 @@ export default function UsersPage() {
         {[
           { label: "Total Members", value: users.length, icon: Users, color: "text-primary",         bg: "bg-primary/10"   },
           { label: "Admins",        value: adminCount,   icon: Crown, color: "text-primary",         bg: "bg-primary/10"   },
-          { label: "Editors",       value: editorCount,  icon: Edit3, color: "text-blue-600",        bg: "bg-blue-500/10"  },
+          { label: "Editors",       value: editorCount,  icon: Edit3, color: "text-primary",        bg: "bg-primary/10"  },
           { label: "Viewers",       value: viewerCount,  icon: Eye,   color: "text-muted-foreground", bg: "bg-black/[0.04]" },
         ].map(stat => {
           const Icon = stat.icon;

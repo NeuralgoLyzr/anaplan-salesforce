@@ -19,9 +19,9 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 function priorityBadge(p: string): { label: string; cls: string } | null {
-  if (p === "before_approval") return { label: "Before approval", cls: "bg-amber-500/10 text-amber-600 border-amber-400/20" };
+  if (p === "before_approval") return { label: "Before approval", cls: "bg-warning/10 text-warning border-warning/20" };
   if (p === "post_approval") return { label: "After approval", cls: "bg-muted/60 text-muted-foreground border-border/50" };
-  if (p === "informational") return { label: "Informational", cls: "bg-sky-500/10 text-sky-600 border-sky-400/20" };
+  if (p === "informational") return { label: "Informational", cls: "bg-primary/10 text-primary border-primary/20" };
   return null;
 }
 
@@ -74,7 +74,7 @@ export function RecommendedActions({ session, handlers }: Props) {
         <span className="text-sm font-semibold text-foreground">Anomalies &amp; Actions</span>
         <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{total} action{total === 1 ? "" : "s"}</span>
         {blocking > 0 && (
-          <span className="text-[10px] font-medium bg-red-500/10 text-red-600 border border-red-400/20 px-1.5 py-0.5 rounded-full">{blocking} blocking</span>
+          <span className="text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded-full">{blocking} blocking</span>
         )}
       </div>
 
@@ -182,12 +182,12 @@ function ActionCard({ item, handlers }: { item: ActionItemView; handlers: Action
 
   const statusPill =
     item.status === "accepted"
-      ? { label: "Performed", cls: "bg-emerald-500/10 text-emerald-600 border-emerald-400/20" }
+      ? { label: "Performed", cls: "bg-success/10 text-success border-success/20" }
       : item.status === "completed"
-      ? { label: "Marked complete", cls: "bg-sky-500/10 text-sky-600 border-sky-400/20" }
+      ? { label: "Marked complete", cls: "bg-primary/10 text-primary border-primary/20" }
       : item.status === "rejected"
-      ? { label: "Dismissed", cls: "bg-red-500/10 text-red-600 border-red-400/20" }
-      : { label: "Pending", cls: "bg-amber-500/10 text-amber-600 border-amber-400/20" };
+      ? { label: "Dismissed", cls: "bg-destructive/10 text-destructive border-destructive/20" }
+      : { label: "Pending", cls: "bg-warning/10 text-warning border-warning/20" };
 
   // Approve is disabled only when there's an actual upload box rendered (the
   // user must drop a file to perform the action). Legacy upload-type actions
@@ -225,7 +225,7 @@ function ActionCard({ item, handlers }: { item: ActionItemView; handlers: Action
             )}
             {prio && <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full border", prio.cls)}>{prio.label}</span>}
             {item.blocking && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-400/20">Blocking</span>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">Blocking</span>
             )}
           </div>
 
@@ -260,14 +260,14 @@ function ActionCard({ item, handlers }: { item: ActionItemView; handlers: Action
 
           {/* Success banner shown immediately after a file upload completes */}
           {uploadSummary && (
-            <div className="flex items-start gap-2 rounded-lg border border-emerald-400/30 bg-emerald-500/5 px-3 py-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/5 px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
               <div className="text-[12px] leading-relaxed">
-                <p className="font-medium text-emerald-700">
+                <p className="font-medium text-success">
                   {uploadSummary.operation === "update" ? "Replaced" : "Added"}{" "}
                   <span className="font-mono">{uploadSummary.filename}</span>
                 </p>
-                <p className="text-emerald-700/80 text-[11px]">
+                <p className="text-success/80 text-[11px]">
                   Session now has <span className="font-semibold">{uploadSummary.total_files} file{uploadSummary.total_files === 1 ? "" : "s"}</span>
                   {uploadSummary.pushed_to_salesforce && " · synced to Salesforce"}
                   {uploadSummary.triggers_rerun && " · re-running Reader + Pricing"}
@@ -287,20 +287,20 @@ function ActionCard({ item, handlers }: { item: ActionItemView; handlers: Action
                 : "Approve will perform this action."}
             </p>
             {performing ? (
-              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-success">
                 <Loader2 className="w-4 h-4 animate-spin" /> Performing task…
               </span>
             ) : item.status === "pending" ? (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => decide("reject")}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-destructive text-white hover:bg-destructive transition-colors"
                 >
                   <XCircle className="w-3.5 h-3.5" /> Reject
                 </button>
                 <button
                   onClick={() => decide("complete")}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary transition-colors"
                   title="Mark as complete without automation"
                 >
                   <Check className="w-3.5 h-3.5" /> Mark Complete
@@ -313,7 +313,7 @@ function ActionCard({ item, handlers }: { item: ActionItemView; handlers: Action
                   disabled={acceptDisabled}
                   className={cn(
                     "inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg text-white transition-colors",
-                    acceptDisabled ? "bg-emerald-600/40 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"
+                    acceptDisabled ? "bg-success/40 cursor-not-allowed" : "bg-success hover:bg-success"
                   )}
                   title={acceptDisabled ? "Upload a file above to approve" : ""}
                 >
@@ -324,9 +324,9 @@ function ActionCard({ item, handlers }: { item: ActionItemView; handlers: Action
               <span
                 className={cn(
                   "inline-flex items-center gap-1.5 text-[12px] font-medium",
-                  item.status === "accepted" ? "text-emerald-700"
-                  : item.status === "completed" ? "text-sky-700"
-                  : "text-red-700"
+                  item.status === "accepted" ? "text-success"
+                  : item.status === "completed" ? "text-primary"
+                  : "text-destructive"
                 )}
               >
                 {item.status === "accepted" ? <CheckCircle2 className="w-4 h-4" />

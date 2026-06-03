@@ -18,82 +18,21 @@ export interface ChatEvent {
   meta?: Record<string, any>;
 }
 
+export interface Artifact {
+  id: string;
+  title: string;
+  kind: string;
+  content: string;
+}
+
 function generateSessionId(): string {
   return `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 }
 
-// ---------------------------------------------------------------------------
-// TODO: Replace the mock below with your real backend API call.
-//
-// The sendMessage function should:
-//   1. POST { messages, sessionId } to your chat endpoint
-//   2. Read the response as SSE (text/event-stream) or JSON
-//   3. Stream tokens into the agent message via setMessages(...)
-//   4. Emit phase/skill/file events via setActiveEvents(...)
-//
-// All state setters and the hook's return value stay the same — only swap
-// the data source inside sendMessage.
-//
-// Example SSE event types the UI understands:
-//   "delta"         — { text: string }              → appends to agent message
-//   "phase"         — { phase, name, description }  → pipeline phase header
-//   "skill_detect"  — { skills, reasoning, action } → skills detected
-//   "file_fetch"    — { file, path, preview }        → file read activity
-//   "done"          — {}                             → stream complete
-//   "error"         — { error: string }              → error message
-// ---------------------------------------------------------------------------
-
-const MOCK_RESPONSE = `I can help you with that! This is a **sample response** from the Agent Console.
-
-## Connecting Your Backend
-
-To wire up a real AI backend:
-
-1. Open \`src/hooks/use-chat-stream.ts\`
-2. Replace the \`simulateMockStream\` call inside \`sendMessage\` with a real \`fetch\` to your API endpoint
-3. Parse the SSE stream and call the provided state setters
-
-The component will work identically once the data source is real. The sidebar's Skill Journeys, Knowledge Base, and Workspace panels are all wired to the same hook state.`;
-
-async function simulateMockStream(
-  content: string,
-  agentMessageId: string,
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
-  setActiveEvents: React.Dispatch<React.SetStateAction<ChatEvent[]>>,
-  setCurrentPhase: React.Dispatch<React.SetStateAction<{ phase: number; name: string; description: string } | null>>,
-  cancelledRef: React.MutableRefObject<boolean>
-) {
-  const phases = [
-    { phase: 1, name: "Understanding", description: "Analyzing your request" },
-    { phase: 2, name: "Processing", description: "Running agent pipeline" },
-    { phase: 3, name: "Generating", description: "Composing response" },
-  ];
-
-  for (const p of phases) {
-    if (cancelledRef.current) return;
-    await new Promise(r => setTimeout(r, 280));
-    setCurrentPhase(p);
-    setActiveEvents(prev => [...prev, { type: "phase", data: p.name, timestamp: Date.now(), meta: p }]);
-  }
-
-  const response = content.toLowerCase().includes("survey")
-    ? "I can help design a survey. Connect your backend to generate questions tailored to your engagement context and client industry."
-    : content.toLowerCase().includes("benchmark")
-    ? "Competitive benchmarking requires live data. Connect a search integration or your data backend to provide real-time competitor analysis."
-    : content.toLowerCase().includes("policy") || content.toLowerCase().includes("analyz")
-    ? "Policy analysis works best with your actual documents. Connect your document processing backend to analyze uploaded files."
-    : MOCK_RESPONSE;
-
-  for (let i = 0; i < response.length; i += 3) {
-    if (cancelledRef.current) return;
-    await new Promise(r => setTimeout(r, 18));
-    const chunk = response.slice(i, i + 3);
-    setMessages(prev => prev.map(msg =>
-      msg.id === agentMessageId ? { ...msg, content: msg.content + chunk } : msg
-    ));
-  }
-}
-
+// Maps the gitagent-backed SSE events from /api/agent/chat onto the UI's
+// existing event primitives. The agent's built-in `read` tool reading a
+// SKILL.md or knowledge file is what produces the "reading skill / file"
+// activity — it's real, not simulated.
 export function useChatStream() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -102,18 +41,15 @@ export function useChatStream() {
   const [currentPhase, setCurrentPhase] = useState<{ phase: number; name: string; description: string } | null>(null);
   const [detectedSkills, setDetectedSkills] = useState<string[]>([]);
   const [detectedClient, setDetectedClient] = useState<string | null>(null);
-  const cancelledRef = useRef(false);
+  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
   const sessionIdRef = useRef<string>(generateSessionId());
-
-  // Silence unused-variable warning on sessionIdRef — it's passed to real API calls
-  void sessionIdRef;
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim()) return;
 
     const agentMessageId = Math.random().toString(36).substring(7);
-
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
       { id: Math.random().toString(36).substring(7), role: "user", content },
       { id: agentMessageId, role: "agent", content: "" },
@@ -124,31 +60,122 @@ export function useChatStream() {
     setCurrentPhase(null);
     setDetectedSkills([]);
     setDetectedClient(null);
-    cancelledRef.current = false;
 
-    // ── Replace this block with your real API call ──────────────────────────
-    // const response = await fetch("/api/your/chat/endpoint", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ message: content, sessionId: sessionIdRef.current }),
-    // });
-    // … read SSE stream and call setMessages / setActiveEvents / etc.
-    // ───────────────────────────────────────────────────────────────────────
-    await simulateMockStream(content, agentMessageId, setMessages, setActiveEvents, setCurrentPhase, cancelledRef);
+    const pushEvent = (type: string, data: ChatEvent["data"], meta?: Record<string, unknown>) =>
+      setActiveEvents((prev) => [...prev, { type, data, timestamp: Date.now(), meta }]);
 
-    if (!cancelledRef.current) {
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const res = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: content, sessionId: sessionIdRef.current }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(detail || `Request failed (${res.status})`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      const appendText = (text: string) =>
+        setMessages((prev) => prev.map((m) => (m.id === agentMessageId ? { ...m, content: m.content + text } : m)));
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE frames are separated by a blank line.
+        const frames = buffer.split("\n\n");
+        buffer = frames.pop() ?? "";
+
+        for (const frame of frames) {
+          const line = frame.split("\n").find((l) => l.startsWith("data:"));
+          if (!line) continue;
+          let evt: Record<string, unknown>;
+          try {
+            evt = JSON.parse(line.slice(5).trim());
+          } catch {
+            continue;
+          }
+
+          switch (evt.type) {
+            case "delta":
+              appendText(String(evt.text ?? ""));
+              break;
+
+            case "skill_read": {
+              const skill = String(evt.skill ?? "");
+              setDetectedSkills((prev) => (prev.includes(skill) ? prev : [...prev, skill]));
+              pushEvent("skill_loading", skill, { action: `Reading skill · ${skill}`, path: evt.path });
+              break;
+            }
+
+            case "file_read": {
+              const file = String(evt.file ?? "");
+              setActiveFiles((prev) => (prev.includes(file) ? prev : [...prev, file]));
+              pushEvent("file_fetch", file, { action: `Reading file · ${file}`, path: evt.path, category: "knowledge" });
+              break;
+            }
+
+            case "action": {
+              const tool = String(evt.tool ?? "tool");
+              const label = tool === "list_contracts" ? "Queried live pipeline data · list_contracts" : `Called tool · ${tool}`;
+              pushEvent("tool_call", tool, { action: label, category: "integration" });
+              break;
+            }
+
+            case "artifact":
+              setArtifacts((prev) => [
+                ...prev,
+                {
+                  id: String(evt.id ?? Math.random().toString(36).slice(2)),
+                  title: String(evt.title ?? "Artifact"),
+                  kind: String(evt.kind ?? "markdown"),
+                  content: String(evt.content ?? ""),
+                },
+              ]);
+              pushEvent("skill_execute", String(evt.title ?? "Artifact"), { action: `Created artifact · ${evt.title}` });
+              break;
+
+            case "error":
+              appendText(`\n\n> ⚠️ ${String(evt.error ?? "Something went wrong.")}`);
+              break;
+
+            case "done":
+              break;
+          }
+        }
+      }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === agentMessageId ? { ...m, content: m.content || `⚠️ ${(e as Error).message}` } : m,
+          ),
+        );
+      }
+    } finally {
       setIsStreaming(false);
       setCurrentPhase(null);
+      abortRef.current = null;
     }
   }, []);
 
   const stopStream = useCallback(() => {
-    cancelledRef.current = true;
+    abortRef.current?.abort();
     setIsStreaming(false);
   }, []);
 
   const resetChat = useCallback(() => {
-    cancelledRef.current = true;
+    abortRef.current?.abort();
     setMessages([]);
     setIsStreaming(false);
     setActiveEvents([]);
@@ -156,8 +183,9 @@ export function useChatStream() {
     setCurrentPhase(null);
     setDetectedSkills([]);
     setDetectedClient(null);
+    setArtifacts([]);
     sessionIdRef.current = generateSessionId();
   }, []);
 
-  return { messages, setMessages, isStreaming, activeEvents, activeFiles, currentPhase, detectedSkills, detectedClient, sendMessage, stopStream, resetChat };
+  return { messages, setMessages, isStreaming, activeEvents, activeFiles, currentPhase, detectedSkills, detectedClient, artifacts, sendMessage, stopStream, resetChat };
 }

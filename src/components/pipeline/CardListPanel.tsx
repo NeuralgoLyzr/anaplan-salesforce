@@ -10,16 +10,16 @@ export type { TaskCard };
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
   "Todo":        "bg-slate-400/10 text-slate-500 border-slate-300/30",
-  "In Progress": "bg-blue-500/10 text-blue-600 border-blue-400/20",
-  "Done":        "bg-emerald-500/10 text-emerald-600 border-emerald-400/20",
-  "Blocked":     "bg-red-500/10 text-red-600 border-red-400/20",
-  "Review":      "bg-amber-500/10 text-amber-600 border-amber-400/20",
+  "In Progress": "bg-primary/10 text-primary border-primary/20",
+  "Done":        "bg-success/10 text-success border-success/20",
+  "Blocked":     "bg-destructive/10 text-destructive border-destructive/20",
+  "Review":      "bg-warning/10 text-warning border-warning/20",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  critical: "bg-red-500/10 text-red-600",
-  high:     "bg-orange-500/10 text-orange-600",
-  medium:   "bg-amber-500/10 text-amber-600",
+  critical: "bg-destructive/10 text-destructive",
+  high:     "bg-warning/10 text-warning",
+  medium:   "bg-warning/10 text-warning",
   low:      "bg-slate-400/10 text-slate-500",
 };
 

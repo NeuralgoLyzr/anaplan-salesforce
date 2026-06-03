@@ -312,11 +312,11 @@ export function groupBySeverity(anomalies: Anomaly[]): { severity: Severity; ite
 }
 
 export const SEVERITY_STYLE: Record<Severity, { pill: string; dot: string; label: string }> = {
-  critical: { pill: "bg-red-500/10 text-red-600 border-red-400/20", dot: "bg-red-500", label: "Critical" },
-  high:     { pill: "bg-orange-500/10 text-orange-600 border-orange-400/20", dot: "bg-orange-500", label: "High" },
-  medium:   { pill: "bg-amber-500/10 text-amber-600 border-amber-400/20", dot: "bg-amber-500", label: "Medium" },
+  critical: { pill: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive", label: "Critical" },
+  high:     { pill: "bg-warning/10 text-warning border-warning/20", dot: "bg-warning", label: "High" },
+  medium:   { pill: "bg-warning/10 text-warning border-warning/20", dot: "bg-warning", label: "Medium" },
   low:      { pill: "bg-slate-400/10 text-slate-500 border-slate-300/30", dot: "bg-slate-400", label: "Low" },
-  info:     { pill: "bg-sky-500/10 text-sky-600 border-sky-400/20", dot: "bg-sky-500", label: "Info" },
+  info:     { pill: "bg-primary/10 text-primary border-primary/20", dot: "bg-primary", label: "Info" },
 };
 
 // ─── Action items (Agent 3) ──────────────────────────────────────

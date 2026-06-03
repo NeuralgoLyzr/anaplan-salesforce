@@ -302,18 +302,18 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  communication: "text-blue-600 bg-blue-50 border-blue-100",
-  productivity:  "text-violet-600 bg-violet-50 border-violet-100",
-  scheduling:    "text-amber-600 bg-amber-50 border-amber-100",
+  communication: "text-primary bg-primary/10 border-primary/30",
+  productivity:  "text-primary bg-primary/10 border-primary/30",
+  scheduling:    "text-warning bg-warning/10 border-warning/30",
   development:   "text-slate-600 bg-slate-100 border-slate-200",
-  storage:       "text-teal-600 bg-teal-50 border-teal-100",
-  media:         "text-rose-600 bg-rose-50 border-rose-100",
-  ai:            "text-cyan-600 bg-cyan-50 border-cyan-100",
+  storage:       "text-success bg-success/10 border-success/30",
+  media:         "text-destructive bg-destructive/10 border-destructive/30",
+  ai:            "text-primary bg-primary/10 border-primary/30",
 };
 
 const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
   connected:      { label: "Connected",     color: "text-success",          bg: "bg-success/10",     icon: CheckCircle2 },
-  pending:        { label: "Pending",       color: "text-blue-600",          bg: "bg-blue-500/10",    icon: Clock       },
+  pending:        { label: "Pending",       color: "text-primary",          bg: "bg-primary/10",    icon: Clock       },
   requires_setup: { label: "Setup needed",  color: "text-warning",           bg: "bg-warning/10",     icon: AlertCircle },
   available:      { label: "Available",     color: "text-muted-foreground",  bg: "bg-black/[0.04]",   icon: Zap         },
 };
@@ -390,7 +390,7 @@ function IntegrationCard({
         "rounded-xl transition-all duration-200 glass-card overflow-hidden",
         enabled           && "ring-2 ring-primary/30 bg-primary/[0.02]",
         isConnected       && "ring-1 ring-success/20",
-        status === "pending" && "ring-1 ring-blue-500/15",
+        status === "pending" && "ring-1 ring-primary/15",
         isExpanded && !enabled && "ring-1 ring-primary/20",
       )}
     >
