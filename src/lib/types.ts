@@ -15,6 +15,7 @@ export interface DashboardInsight {
   summary: string;
   category: string;
   actionLabel?: string;
+  href?: string;
 }
 
 export interface EngagementData {

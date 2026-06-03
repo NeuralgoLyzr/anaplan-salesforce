@@ -51,7 +51,7 @@ export function InsightRow({
           <span className="text-muted-foreground"> — {insight.summary}</span>
         </p>
         <Link
-          href="/console"
+          href={insight.href ?? "/"}
           className="inline-flex items-center text-[11px] font-medium text-primary hover:text-primary/80 transition-colors mt-1 opacity-0 group-hover:opacity-100"
         >
           {insight.actionLabel ?? "Investigate"}

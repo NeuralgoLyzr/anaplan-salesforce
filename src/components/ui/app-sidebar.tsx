@@ -5,10 +5,6 @@ import {
     IconBuildingBank,
     IconDashboard,
     IconTerminal2,
-    IconPlugConnected,
-    IconBook,
-    IconSitemap,
-    IconFolderOpen,
     IconRobot,
     IconFileText,
     IconCoin,
@@ -55,19 +51,6 @@ const data = {
             ],
         },
     ],
-    navTools: [
-        {
-            title: "Tools & Config",
-            url: "/tools",
-            icon: IconPlugConnected,
-            subItems: [
-                { title: "Skills Library",     url: "/tools/skills",       icon: IconBook          },
-                { title: "Integrations",       url: "/tools",              icon: IconPlugConnected },
-                { title: "Agent Architecture", url: "/tools/architecture", icon: IconSitemap       },
-                { title: "File System",        url: "/tools/files",        icon: IconFolderOpen    },
-            ],
-        },
-    ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -89,7 +72,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarContent>
                 <NavMain items={data.navTop} />
                 <NavMain items={data.navAgents} />
-                <NavMain items={data.navTools} />
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={data.user} />
