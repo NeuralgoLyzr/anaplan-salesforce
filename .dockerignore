@@ -1,59 +1,49 @@
-# Keep Docker build context small and avoid leaking secrets into the image.
-# The worker.Dockerfile only COPYs scripts/worker.mjs, but Docker still
-# transfers the whole context to the daemon — exclude bloat aggressively.
+# ─────────────────────────────────────────────────────────────────────────────
+# Shared .dockerignore for both Dockerfile (frontend) and worker.Dockerfile.
+# Keeps the build context small and ensures secrets are NEVER baked into images.
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Build artifacts
+# ── Build artefacts (re-created inside Docker) ───────────────────────────────
 .next
 out
 dist
 build
 
-# Node modules (worker has zero deps)
+# ── Node modules (re-installed inside Docker) ────────────────────────────────
 node_modules
 
-# Local env / secrets — never bake these into the image
+# ── Secrets — NEVER bake into any image ──────────────────────────────────────
 .env
 .env.*
+.env.local
+.env.*.local
 !.env.example
 !.env.local.example
 
-# Source code (worker doesn't need any of it)
-src
-public
-components.json
-next.config.ts
-next-env.d.ts
-tsconfig.json
-postcss.config.mjs
-tailwind.config.*
-eslint.config.mjs
+# ── Git / CI ─────────────────────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.github
 
-# Editor / tooling
+# ── Editor / tooling ─────────────────────────────────────────────────────────
 .claude
 .vscode
 .idea
 .DS_Store
 *.log
+*.pem
+npm-debug.log*
+yarn-debug.log*
 
-# VCS
-.git
-.gitignore
-.gitattributes
+# ── TypeScript / Next.js build metadata ──────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
 
-# Tests / fixtures (if any)
+# ── Tests ─────────────────────────────────────────────────────────────────────
 __tests__
 *.test.*
 *.spec.*
 
-# Other scripts we don't need in the worker image
-scripts/approve-drive.mjs
-scripts/backfill-company-names.mjs
-scripts/inspect-anomaly.mjs
-scripts/inspect-monthly.mjs
-scripts/inspect-task.mjs
-scripts/probe-lyzr.mjs
-scripts/raw.mjs
-scripts/rerun-billing.mjs
-scripts/rerun.mjs
-scripts/seed-billing-v2.mjs
-scripts/test-parse.mjs
+# ── gitagent runtime state (not needed at build time) ────────────────────────
+agent/.gitagent/

@@ -9,6 +9,8 @@
     "lint": "next lint",
     "worker": "node --env-file=.env.local scripts/worker.mjs",
     "backfill:names": "node --env-file=.env.local scripts/backfill-company-names.mjs",
+    "docker:build": "docker build -t vidur:latest .",
+    "docker:run": "docker run --rm -p 3000:3000 --env-file .env.local vidur:latest",
     "docker:worker:build": "docker build -f worker.Dockerfile -t rpt-worker:latest .",
     "docker:worker:run": "docker run --rm --init -e SYNC_URL_BASE=${SYNC_URL_BASE:-http://host.docker.internal:3002} -e SALESFORCE_SYNC_SECRET=$(grep ^SALESFORCE_SYNC_SECRET .env.local | cut -d= -f2) rpt-worker:latest"
   },
