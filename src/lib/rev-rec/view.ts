@@ -107,6 +107,82 @@ export function getAllocation(session: Session): TableView {
   return toTableView(v);
 }
 
+// ─── Traceability ────────────────────────────────────────────────
+// For each allocated figure, join the Pricing allocation row to the Reader's
+// line-item (the contract inputs) so any number can be traced to: which contract
+// line it came from, which inputs fed it, and how it was computed.
+export interface TraceField {
+  label: string;
+  value: string;
+}
+export interface AllocationTraceRow {
+  id: string;
+  product: string;
+  allocated: number | null;
+  currency?: string;
+  recognition?: string;
+  schedule?: string;
+  sourceDoc?: string;
+  inputs: TraceField[];
+}
+
+function toNum(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string") {
+    const n = parseFloat(v.replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+function str(v: unknown): string | undefined {
+  return v == null || v === "" ? undefined : String(v);
+}
+function money(v: unknown, ccy?: string): string {
+  const n = toNum(v);
+  if (n == null) return str(v) ?? "—";
+  return `${ccy ? ccy + " " : ""}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+
+export function getAllocationTrace(session: Session): AllocationTraceRow[] {
+  const p = session.agent_outputs.pricing.json;
+  const r = session.agent_outputs.reader.json;
+  const alloc = pickArray(p, "allocation", "ssp_allocation", "allocations");
+  const lineItems = pickArray(r, "line_items", "lineItems", "items");
+  const byId = new Map<string, Rec>();
+  for (const li of lineItems) {
+    const id = str(pickField(li, "line_item_id", "id", "lineItemId"));
+    if (id) byId.set(id, li);
+  }
+  const ccy = str(pickField(r, "currency", "ccy") ?? pickField(p, "currency"));
+
+  return alloc.map((a, i) => {
+    const id = str(pickField(a, "line_item_id", "id", "lineItemId")) ?? `LI${i + 1}`;
+    const li = byId.get(id) ?? {};
+    const inputs: TraceField[] = [];
+    const qty = pickField(li, "quantity", "qty", "units");
+    const unit = pickField(li, "unit_price", "unitPrice", "price", "list_price");
+    const unitPeriod = str(pickField(li, "unit_price_period", "price_period", "billing_period"));
+    const lineTotal = pickField(li, "line_total", "lineTotal", "extended_total", "total");
+    const ps = str(pickField(li, "period_start", "start", "service_start", "period_start_date"));
+    const pe = str(pickField(li, "period_end", "end", "service_end", "period_end_date"));
+    if (qty != null) inputs.push({ label: "Quantity", value: String(qty) });
+    if (unit != null) inputs.push({ label: "Unit price", value: `${money(unit, ccy)}${unitPeriod ? ` · ${humanizeKey(unitPeriod)}` : ""}` });
+    if (lineTotal != null) inputs.push({ label: "Contract line total", value: money(lineTotal, ccy) });
+    if (ps || pe) inputs.push({ label: "Service period", value: `${ps ?? "?"} → ${pe ?? "?"}` });
+
+    return {
+      id,
+      product: str(pickField(a, "product_name", "product", "line_item", "name")) ?? str(pickField(li, "product_name", "product")) ?? id,
+      allocated: toNum(pickField(a, "allocated_revenue", "allocated_amount", "allocated", "amount", "revenue", "line_total", "total")),
+      currency: ccy,
+      recognition: str(pickField(a, "recognition_pattern", "recognition", "pattern", "recognition_pattern_hint") ?? pickField(li, "recognition_pattern_hint")),
+      schedule: str(pickField(a, "schedule_description", "schedule", "description", "shape", "schedule_shape")),
+      sourceDoc: str(pickField(li, "source_doc_id", "source_doc", "doc_id") ?? pickField(a, "source_doc_id")),
+      inputs,
+    };
+  });
+}
+
 export function getMonthlyProjection(session: Session): TableView {
   const p = session.agent_outputs.pricing.json;
   const raw = pickField(p, "monthly_projection", "monthly_schedule", "projection", "schedule");
