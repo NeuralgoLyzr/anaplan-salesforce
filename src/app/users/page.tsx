@@ -29,9 +29,9 @@ const ROLE_CONFIG: Record<Role, {
   bg: string;
   border: string;
 }> = {
-  Admin:  { label: "Admin",  icon: Crown,  color: "text-primary",         bg: "bg-primary/10",   border: "border-primary/20"  },
-  Editor: { label: "Editor", icon: Edit3,  color: "text-primary",        bg: "bg-primary/10",  border: "border-primary/20" },
-  Viewer: { label: "Viewer", icon: Eye,    color: "text-muted-foreground", bg: "bg-black/[0.04]", border: "border-black/[0.08]" },
+  Admin:  { label: "Admin",  icon: Crown,  color: "text-[#3c67ea]",         bg: "bg-[#f0f1f7]",   border: "border-[#e6ebf8]"  },
+  Editor: { label: "Editor", icon: Edit3,  color: "text-[#3c67ea]",        bg: "bg-[#f0f1f7]",  border: "border-[#e6ebf8]" },
+  Viewer: { label: "Viewer", icon: Eye,    color: "text-[#485478]", bg: "bg-[#f0f1f7]", border: "border-[#e6ebf8]" },
 };
 
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
@@ -66,7 +66,7 @@ function RoleDropdown({
       <button
         onClick={() => setOpen(o => !o)}
         className={cn(
-          "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all",
+          "flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[0.75rem] font-semibold border transition-all",
           cfg.color, cfg.bg, cfg.border
         )}
       >
@@ -84,7 +84,7 @@ function RoleDropdown({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
               transition={{ duration: 0.1 }}
-              className="absolute right-0 top-full mt-1 z-20 glass-card rounded-xl overflow-hidden shadow-lg min-w-[130px]"
+              className="absolute right-0 top-full mt-1 z-20 rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] overflow-hidden shadow-[0_2px_4px_rgba(36,45,72,0.15)] min-w-[130px]"
             >
               {(["Admin", "Editor", "Viewer"] as Role[]).map(role => {
                 const c  = ROLE_CONFIG[role];
@@ -94,8 +94,8 @@ function RoleDropdown({
                     key={role}
                     onClick={() => { onChange(userId, role); setOpen(false); }}
                     className={cn(
-                      "w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-black/[0.04] transition-colors",
-                      role === currentRole ? "font-semibold" : "font-normal text-muted-foreground"
+                      "w-full flex items-center gap-2 px-3 py-2 text-[0.75rem] uppercase tracking-[0.08em] hover:bg-[#f0f1f7] transition-colors",
+                      role === currentRole ? "font-semibold" : "font-normal text-[#485478]"
                     )}
                   >
                     <RI className={cn("w-3 h-3", c.color)} />
@@ -114,8 +114,8 @@ function RoleDropdown({
 function UserAvatar({ initials, isCurrentUser }: { initials: string; isCurrentUser?: boolean }) {
   return (
     <div className={cn(
-      "w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0",
-      isCurrentUser ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+      "w-9 h-9 rounded-[4px] flex items-center justify-center text-[0.75rem] uppercase tracking-[0.08em] font-semibold flex-shrink-0",
+      isCurrentUser ? "bg-[#3c67ea] text-white" : "bg-[#f0f1f7] text-[#3c67ea]"
     )}>
       {initials}
     </div>
@@ -156,15 +156,15 @@ export default function UsersPage() {
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Users className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">User Management</h1>
+            <Users className="w-6 h-6 text-[#3c67ea]" />
+            <h1 className="text-[1.375rem] leading-[1.5] font-semibold text-[#242d48]">User Management</h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[0.875rem] leading-[1.2] text-[#485478]">
             Manage workspace members and their access levels
           </p>
         </div>
 
-        <button className="flex items-center gap-1.5 px-3.5 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity flex-shrink-0">
+        <button className="flex items-center gap-1.5 px-3.5 py-2 bg-[#3c67ea] text-white text-[0.75rem] uppercase tracking-[0.08em] font-semibold rounded-[4px] hover:opacity-90 transition-opacity flex-shrink-0">
           <UserPlus className="w-3.5 h-3.5" />
           Invite Member
         </button>
@@ -173,63 +173,63 @@ export default function UsersPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Total Members", value: users.length, icon: Users, color: "text-primary",         bg: "bg-primary/10"   },
-          { label: "Admins",        value: adminCount,   icon: Crown, color: "text-primary",         bg: "bg-primary/10"   },
-          { label: "Editors",       value: editorCount,  icon: Edit3, color: "text-primary",        bg: "bg-primary/10"  },
-          { label: "Viewers",       value: viewerCount,  icon: Eye,   color: "text-muted-foreground", bg: "bg-black/[0.04]" },
+          { label: "Total Members", value: users.length, icon: Users, color: "text-[#3c67ea]",         bg: "bg-[#f0f1f7]"   },
+          { label: "Admins",        value: adminCount,   icon: Crown, color: "text-[#3c67ea]",         bg: "bg-[#f0f1f7]"   },
+          { label: "Editors",       value: editorCount,  icon: Edit3, color: "text-[#3c67ea]",        bg: "bg-[#f0f1f7]"  },
+          { label: "Viewers",       value: viewerCount,  icon: Eye,   color: "text-[#485478]", bg: "bg-[#f0f1f7]" },
         ].map(stat => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="glass-card rounded-xl p-4">
+            <div key={stat.label} className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-4">
               <div className="flex items-center gap-2 mb-1">
-                <div className={cn("p-1.5 rounded-lg", stat.bg)}>
+                <div className={cn("p-1.5 rounded-[4px]", stat.bg)}>
                   <Icon className={cn("w-3.5 h-3.5", stat.color)} />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">{stat.label}</span>
+                <span className="text-[0.75rem] uppercase tracking-[0.08em] font-medium text-[#485478]">{stat.label}</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-[1.375rem] leading-[1.5] font-semibold text-[#242d48]">{stat.value}</p>
             </div>
           );
         })}
       </div>
 
       {/* Members table */}
-      <div className="glass-card rounded-xl overflow-hidden mb-6">
+      <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] overflow-hidden mb-6">
         {/* Table header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-black/[0.05] gap-3">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#e6ebf8] gap-3">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Users className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Workspace Members</h2>
-            <span className="text-[11px] font-medium text-muted-foreground bg-black/[0.04] px-1.5 py-0.5 rounded-full">
+            <Users className="w-4 h-4 text-[#3c67ea]" />
+            <h2 className="text-[0.875rem] leading-[1.2] font-semibold text-[#242d48]">Workspace Members</h2>
+            <span className="text-[0.75rem] font-medium text-[#485478] bg-[#f0f1f7] px-1.5 py-0.5 rounded-[2px]">
               {users.length}
             </span>
           </div>
 
           {/* Search */}
           <div className="relative max-w-xs w-full">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#485478] pointer-events-none" />
             <input
               type="text"
               placeholder="Search members…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full glass-input rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none"
+              className="w-full bg-[#f8f8fa] border-2 border-dotted border-transparent shadow-[0_0_0_1px_#7885ab] focus:border-[#485478] focus:shadow-none rounded-[4px] pl-8 pr-3 py-1.5 text-[0.75rem] uppercase tracking-[0.08em] text-[#242d48] placeholder:text-[#485478] outline-none"
             />
           </div>
         </div>
 
         {/* Column labels */}
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-2 border-b border-black/[0.04] bg-muted/30">
-          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Member</span>
-          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide hidden sm:block w-24 text-right">Last Active</span>
-          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Role</span>
+        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-2 border-b border-[#e6ebf8] bg-[#f0f1f7]">
+          <span className="text-[0.75rem] font-medium text-[#485478] uppercase tracking-[0.08em]">Member</span>
+          <span className="text-[0.75rem] font-medium text-[#485478] uppercase tracking-[0.08em] hidden sm:block w-24 text-right">Last Active</span>
+          <span className="text-[0.75rem] font-medium text-[#485478] uppercase tracking-[0.08em]">Role</span>
           <span className="w-7" />
         </div>
 
         <div className="divide-y divide-black/[0.04]">
           <AnimatePresence>
             {filtered.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+              <div className="px-5 py-8 text-center text-[0.875rem] leading-[1.2] text-[#485478]">
                 No members match &ldquo;{search}&rdquo;
               </div>
             ) : (
@@ -249,19 +249,19 @@ export default function UsersPage() {
                     <UserAvatar initials={user.avatar} isCurrentUser={user.isCurrentUser} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                        <p className="text-[0.875rem] leading-[1.2] font-semibold text-[#242d48] truncate">{user.name}</p>
                         {user.isCurrentUser && (
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/20 flex-shrink-0">
+                          <span className="text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#3c67ea] bg-[#f0f1f7] px-1.5 py-0.5 rounded-[2px] border border-[#e6ebf8] flex-shrink-0">
                             You
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[#485478] truncate">{user.email}</p>
                     </div>
                   </div>
 
                   {/* Last active */}
-                  <span className="text-[11px] text-muted-foreground/50 hidden sm:block w-24 text-right flex-shrink-0">
+                  <span className="text-[0.75rem] text-[#485478] hidden sm:block w-24 text-right flex-shrink-0">
                     {user.lastActive}
                   </span>
 
@@ -269,7 +269,7 @@ export default function UsersPage() {
                   <div className="flex-shrink-0">
                     {user.isCurrentUser ? (
                       <div className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border",
+                        "flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[0.75rem] font-semibold border",
                         ROLE_CONFIG[user.role].color,
                         ROLE_CONFIG[user.role].bg,
                         ROLE_CONFIG[user.role].border
@@ -288,10 +288,10 @@ export default function UsersPage() {
                     disabled={user.isCurrentUser}
                     title={user.isCurrentUser ? "Cannot remove yourself" : `Remove ${user.name}`}
                     className={cn(
-                      "p-1.5 rounded-lg transition-colors w-7 flex items-center justify-center",
+                      "p-1.5 rounded-[4px] transition-colors w-7 flex items-center justify-center",
                       user.isCurrentUser
-                        ? "text-muted-foreground/20 cursor-not-allowed"
-                        : "text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                        ? "text-[#485478] cursor-not-allowed"
+                        : "text-[#485478] hover:text-[#db3743] hover:bg-white"
                     )}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -304,10 +304,10 @@ export default function UsersPage() {
       </div>
 
       {/* Role Permissions */}
-      <div className="glass-card rounded-xl overflow-hidden">
-        <div className="flex items-center gap-2 px-5 py-3 border-b border-black/[0.05]">
-          <Shield className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">Role Permissions</h2>
+      <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-[#e6ebf8]">
+          <Shield className="w-4 h-4 text-[#3c67ea]" />
+          <h2 className="text-[0.875rem] leading-[1.2] font-semibold text-[#242d48]">Role Permissions</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-black/[0.05]">
           {(["Admin", "Editor", "Viewer"] as Role[]).map(role => {
@@ -316,7 +316,7 @@ export default function UsersPage() {
             return (
               <div key={role} className="p-5">
                 <div className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border mb-3",
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-[0.75rem] font-semibold border mb-3",
                   cfg.color, cfg.bg, cfg.border
                 )}>
                   <Icon className="w-3 h-3" />
@@ -324,8 +324,8 @@ export default function UsersPage() {
                 </div>
                 <ul className="space-y-1.5">
                   {ROLE_PERMISSIONS[role].map(perm => (
-                    <li key={perm} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <span className="text-primary mt-0.5">✓</span>
+                    <li key={perm} className="flex items-start gap-2 text-[0.75rem] uppercase tracking-[0.08em] text-[#485478]">
+                      <span className="text-[#3c67ea] mt-0.5">✓</span>
                       {perm}
                     </li>
                   ))}

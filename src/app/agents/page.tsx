@@ -36,13 +36,13 @@ export default function AgentsIndexPage() {
     <div className="space-y-5 px-4 sm:px-6 py-5 pb-12">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <IconRobot className="w-4 h-4 text-primary" />
+          <div className="w-9 h-9 rounded-[4px] bg-[#f0f1f7] flex items-center justify-center">
+            <IconRobot className="w-4 h-4 text-[#3c67ea]" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Agents</p>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Agent workspace</h1>
-            <p className="text-[11px] text-muted-foreground font-medium">
+            <p className="text-[0.75rem] uppercase text-[#485478] font-medium">Agents</p>
+            <h1 className="text-[1rem] leading-[1.2] font-semibold text-[#242d48]">Agent workspace</h1>
+            <p className="text-[0.75rem] text-[#485478] font-medium">
               Bulk-review responses from each agent, grouped by customer.
             </p>
           </div>
@@ -61,14 +61,14 @@ export default function AgentsIndexPage() {
           <Link
             key={href}
             href={href}
-            className="glass-card rounded-xl p-4 flex items-start gap-3 hover:bg-primary/[0.03] transition-colors"
+            className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-4 flex items-start gap-3 hover:bg-[#f0f1f7]] transition-colors"
           >
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Icon className="w-4 h-4 text-primary" />
+            <div className="w-9 h-9 rounded-[4px] bg-[#f0f1f7] flex items-center justify-center shrink-0">
+              <Icon className="w-4 h-4 text-[#3c67ea]" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">{title}</p>
-              <p className="text-[12px] text-muted-foreground mt-0.5 leading-relaxed">{blurb}</p>
+              <p className="text-[0.875rem] leading-[1.2] font-semibold text-[#242d48]">{title}</p>
+              <p className="text-[0.75rem] text-[#485478] mt-0.5 leading-[1.2]">{blurb}</p>
             </div>
           </Link>
         ))}

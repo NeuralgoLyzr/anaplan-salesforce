@@ -1,14 +1,13 @@
 "use client";
-
 import { useState } from "react";
 import { IconCoin } from "@tabler/icons-react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { AgentBulkShell } from "@/components/rev-rec/AgentBulkShell";
 import { Gate1RevenuePlan } from "@/components/rev-rec/Gate1RevenuePlan";
 import { Button } from "@/components/ui/button";
 import type { Session } from "@/lib/rev-rec/types";
 import { getReconciliation } from "@/lib/rev-rec/view";
-
+import { Loader } from "@/components/ui/loader";
 async function postGate1(
   sessionId: string,
   section: "allocation" | "monthly",
@@ -24,7 +23,6 @@ async function postGate1(
   if (!res.ok) throw new Error(data.error ?? "Approval failed");
   return data.session as Session;
 }
-
 export default function PricingAgentPage() {
   return (
     <AgentBulkShell
@@ -50,14 +48,14 @@ export default function PricingAgentPage() {
         const reconBad = recon.allocationMatches === false || recon.monthlyMatches === false;
         if (s.status === "gate1") {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20">
+            <span className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border bg-white text-[#ffbb16] border-[#ffbb16]">
               Action needed
             </span>
           );
         }
         if (reconBad) {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-destructive/10 text-destructive border-destructive/20">
+            <span className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border bg-white text-[#db3743] border-[#db3743]">
               Reconciliation failed
             </span>
           );
@@ -77,17 +75,14 @@ export default function PricingAgentPage() {
     />
   );
 }
-
 function BulkApproveButton({ sessions, refresh }: { sessions: Session[]; refresh: () => void }) {
   const [busy, setBusy] = useState(false);
   const [approver, setApprover] = useState("");
-
   const pending = sessions.filter((s) => {
     if (s.status !== "gate1") return false;
     const recon = getReconciliation(s);
     return !(recon.allocationMatches === false || recon.monthlyMatches === false);
   });
-
   async function approveAll() {
     if (pending.length === 0) return;
     setBusy(true);
@@ -103,17 +98,16 @@ function BulkApproveButton({ sessions, refresh }: { sessions: Session[]; refresh
       setBusy(false);
     }
   }
-
   return (
     <div className="flex items-center gap-2">
       <input
-        className="glass-input rounded-lg px-3 py-1.5 text-sm w-40"
+        className="bg-[#f8f8fa] border-2 border-dotted border-transparent shadow-[0_0_0_1px_#7885ab] focus:border-[#485478] focus:shadow-none rounded-[4px] px-3 py-1.5 text-[0.875rem] leading-[1.2] w-40"
         placeholder="Approver (optional)"
         value={approver}
         onChange={(e) => setApprover(e.target.value)}
       />
       <Button size="sm" className="gap-1.5" disabled={busy || pending.length === 0} onClick={approveAll}>
-        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+        {busy ? <Loader size="inline" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
         Bulk approve ({pending.length})
       </Button>
     </div>

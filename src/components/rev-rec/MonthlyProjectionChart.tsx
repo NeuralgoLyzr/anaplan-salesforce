@@ -32,7 +32,7 @@ function compactNumber(n: number): string {
 export function MonthlyProjectionChart({ data, products, currency }: Props) {
   if (!data || data.length === 0 || products.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground py-2">No monthly projection returned by Pricing.</p>
+      <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[#485478] py-2">No monthly projection returned by Pricing.</p>
     );
   }
 

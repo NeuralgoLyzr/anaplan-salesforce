@@ -226,34 +226,29 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Header Banner */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="p-2.5 rounded-2xl bg-primary/10 border border-primary/20">
-              <Settings className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Workspace Customizer</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Standardize semantic colors, spacing densities, and branding components dynamically.
-              </p>
-            </div>
-          </div>
+    <div className="app-bg min-h-screen">
+      {/* ADS PageHeader */}
+      <header
+        style={{ display: "grid", gridTemplateAreas: "'back header actions'", gridTemplateColumns: "min-content 1fr auto", alignItems: "center" }}
+        className="w-full h-[56px] bg-white border-b border-[#e6ebf8] px-4"
+      >
+        <div style={{ gridArea: "header" }} className="flex items-center gap-2 min-w-0">
+          <Settings className="w-4 h-4 text-[#3c67ea] shrink-0" />
+          <h1 className="text-[1.375rem] font-semibold leading-[1.5] text-[#242d48]">Workspace Customizer</h1>
         </div>
-
-        {/* Global Reset */}
-        {showForm && (
-          <button
-            onClick={resetForm}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-white text-xs font-semibold text-muted-foreground hover:bg-black/[0.03] transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Reset Customizer
-          </button>
-        )}
-      </div>
+        <div style={{ gridArea: "actions" }}>
+          {showForm && (
+            <button
+              onClick={resetForm}
+              className="inline-flex items-center gap-2 py-2 px-4 rounded-[2px] text-[0.875rem] font-semibold text-[#3c67ea] shadow-[inset_0_0_0_1px_#3c67ea] hover:bg-[#f0f1f7] hover:text-[#1947ba] hover:shadow-[inset_0_0_0_2px_#1947ba] transition-all duration-200"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reset
+            </button>
+          )}
+        </div>
+      </header>
+    <div className="p-4 md:p-6 max-w-7xl mx-auto">
 
 
 
@@ -263,11 +258,11 @@ export default function SettingsPage() {
         <div className="lg:col-span-7 flex flex-col gap-6">
 
           {/* Preset Swatches Panel */}
-          <div className="glass-card rounded-2xl p-5 border border-black/[0.05]">
+          <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-4">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Enterprise Brand Presets</p>
-                <p className="text-[11px] text-muted-foreground">Apply production presets to instantly custom-brand this interface.</p>
+                <p className="text-[0.75rem] uppercase tracking-[0.08em] font-semibold text-[#485478] tracking-[0.08em]">Enterprise Brand Presets</p>
+                <p className="text-[0.75rem] text-[#485478]">Apply production presets to instantly custom-brand this interface.</p>
               </div>
             </div>
 
@@ -284,21 +279,21 @@ export default function SettingsPage() {
                       syncFormFromTheme(theme);
                     }}
                     className={cn(
-                      "flex items-center justify-between p-2 rounded-xl border text-left transition-all relative group",
+                      "flex items-center justify-between p-2 rounded-[4px] border text-left transition-all relative group",
                       isActive
-                        ? "border-primary bg-primary/5 shadow-sm"
-                        : "border-border hover:border-primary/20 hover:bg-black/[0.01]"
+                        ? "border-[#3c67ea] bg-[#f0f1f7] shadow-[0_2px_4px_rgba(36,45,72,0.15)]"
+                        : "border-[#e6ebf8] hover:border-[#e6ebf8] hover:bg-[#f0f1f7]"
                     )}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span
-                        className="w-7 h-7 rounded-lg text-[10px] font-bold text-white flex items-center justify-center flex-shrink-0"
+                        className="w-7 h-7 rounded-[4px] text-[0.75rem] font-semibold text-white flex items-center justify-center flex-shrink-0"
                         style={{ background: theme.sidebarHex }}
                       >
                         {theme.initials}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{theme.label}</p>
+                        <p className="text-[0.75rem] uppercase tracking-[0.08em] font-semibold text-[#242d48] truncate">{theme.label}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <span className="w-2 h-2 rounded-full" style={{ background: theme.primaryHex }} />
                           <span className="w-2 h-2 rounded-full" style={{ background: theme.sidebarHex }} />
@@ -314,7 +309,7 @@ export default function SettingsPage() {
                             e.stopPropagation();
                             handleEdit(theme);
                           }}
-                          className="opacity-0 group-hover:opacity-100 hover:text-primary p-1 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 hover:text-[#3c67ea] p-1 transition-opacity"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -326,7 +321,7 @@ export default function SettingsPage() {
                             e.stopPropagation();
                             deleteCustomTheme(theme.id);
                           }}
-                          className="opacity-0 group-hover:opacity-100 hover:text-destructive p-1 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 hover:text-[#db3743] p-1 transition-opacity"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -342,7 +337,7 @@ export default function SettingsPage() {
                   setShowForm(true);
                   setForm(prev => ({ ...prev, name: "Custom Brand" }));
                 }}
-                className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/[0.02] text-xs font-semibold text-muted-foreground hover:text-primary transition-all"
+                className="flex items-center justify-center gap-1.5 p-2 rounded-[4px] border border-dashed border-[#e6ebf8] hover:border-[#3c67ea] hover:bg-[#f0f1f7]] text-[0.75rem] uppercase tracking-[0.08em] font-semibold text-[#485478] hover:text-[#3c67ea] transition-all"
               >
                 <Plus className="w-4 h-4" />
                 Build Custom
@@ -352,34 +347,34 @@ export default function SettingsPage() {
 
           {/* Detailed Customizer Configurator Tabs */}
           {(showForm || editingTheme) && (
-            <div className="glass-card rounded-2xl border border-black/[0.05] overflow-hidden">
-              <div className="px-5 py-4 border-b border-black/[0.03] flex items-center justify-between bg-muted/10">
+            <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#e6ebf8] flex items-center justify-between bg-[#f0f1f7]">
                 <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-foreground">
+                  <Palette className="w-4 h-4 text-[#3c67ea]" />
+                  <span className="text-[0.75rem] uppercase tracking-[0.08em] font-semibold text-[#242d48]">
                     {editingTheme ? `Customize: ${editingTheme.label}` : "Corporate Customizer Studio"}
                   </span>
                 </div>
-                <button onClick={resetForm} className="p-1 rounded-full hover:bg-black/5 text-muted-foreground">
+                <button onClick={resetForm} className="p-1 rounded-[2px] hover:bg-[#f0f1f7] text-[#485478]">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Global Fields Container (Always Visible) */}
-              <div className="p-5 pb-5 border-b border-black/[0.03] bg-muted/5 flex flex-col md:flex-row gap-4">
+              <div className="p-5 pb-5 border-b border-[#e6ebf8] bg-[#f0f1f7] flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
-                  <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5 font-sans">Theme Brand Name</label>
+                  <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5 font-sans">Theme Brand Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Deloitte, CCBank..."
                     value={form.name}
                     onChange={e => { handleFormChange({ name: e.target.value }); setNameError(""); }}
-                    className="w-full glass-input rounded-xl px-3 py-2 text-xs outline-none bg-white border border-border"
+                    className="w-full bg-[#f8f8fa] border-2 border-dotted border-transparent shadow-[0_0_0_1px_#7885ab] focus:border-[#485478] focus:shadow-none rounded-[4px] px-3 py-2 text-[0.75rem] uppercase tracking-[0.08em] outline-none bg-white border border-[#e6ebf8]"
                   />
-                  {nameError && <p className="text-[11px] text-destructive mt-1 font-semibold">{nameError}</p>}
+                  {nameError && <p className="text-[0.75rem] text-[#db3743] mt-1 font-semibold">{nameError}</p>}
                 </div>
                 <div className="md:w-64">
-                  <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5 font-sans">Enterprise Color Scheme</label>
+                  <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5 font-sans">Enterprise Color Scheme</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(["light", "dark", "system"] as const).map(m => (
                       <button
@@ -387,10 +382,10 @@ export default function SettingsPage() {
                         type="button"
                         onClick={() => handleFormChange({ mode: m })}
                         className={cn(
-                          "px-3 py-2 rounded-xl text-center border text-xs font-semibold capitalize transition-all",
+                          "px-3 py-2 rounded-[4px] text-center border text-[0.75rem] uppercase tracking-[0.08em] font-semibold capitalize transition-all",
                           form.mode === m
-                            ? "bg-primary/5 border-primary text-primary"
-                            : "border-border text-muted-foreground hover:bg-black/[0.01]"
+                            ? "bg-[#f0f1f7] border-[#3c67ea] text-[#3c67ea]"
+                            : "border-[#e6ebf8] text-[#485478] hover:bg-[#f0f1f7]"
                         )}
                       >
                         {m === "system" ? "💻 System" : m === "light" ? "☀ Light" : "🌙 Dark"}
@@ -401,24 +396,24 @@ export default function SettingsPage() {
               </div>
 
               {/* Dynamic Action Tabs */}
-              <div className="flex border-b border-black/[0.03] bg-muted/5 text-[11px] font-semibold text-muted-foreground">
+              <div className="flex border-b border-[#e6ebf8] bg-[#f0f1f7] text-[0.75rem] font-semibold text-[#485478]">
                 <button
                   onClick={() => setActiveTab("colors")}
-                  className={cn("px-4 py-3 flex items-center gap-1.5 border-b-2 border-transparent transition-all", activeTab === "colors" && "text-primary border-primary bg-white")}
+                  className={cn("px-4 py-3 flex items-center gap-1.5 border-b-2 border-transparent transition-all", activeTab === "colors" && "text-[#3c67ea] border-[#3c67ea] bg-white")}
                 >
                   <Sliders className="w-3.5 h-3.5" />
                   Semantic Colors
                 </button>
                 <button
                   onClick={() => setActiveTab("typography")}
-                  className={cn("px-4 py-3 flex items-center gap-1.5 border-b-2 border-transparent transition-all", activeTab === "typography" && "text-primary border-primary bg-white")}
+                  className={cn("px-4 py-3 flex items-center gap-1.5 border-b-2 border-transparent transition-all", activeTab === "typography" && "text-[#3c67ea] border-[#3c67ea] bg-white")}
                 >
                   <Type className="w-3.5 h-3.5" />
                   Fonts & Density
                 </button>
                 <button
                   onClick={() => setActiveTab("sidebar")}
-                  className={cn("px-4 py-3 flex items-center gap-1.5 border-b-2 border-transparent transition-all", activeTab === "sidebar" && "text-primary border-primary bg-white")}
+                  className={cn("px-4 py-3 flex items-center gap-1.5 border-b-2 border-transparent transition-all", activeTab === "sidebar" && "text-[#3c67ea] border-[#3c67ea] bg-white")}
                 >
                   <Layout className="w-3.5 h-3.5" />
                   SaaS Navigation Skins
@@ -460,8 +455,8 @@ export default function SettingsPage() {
                       />
                     </div>
 
-                    <div className="border-t border-black/[0.04] pt-4">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Semantic Layout Overrides</p>
+                    <div className="border-t border-[#e6ebf8] pt-4">
+                      <p className="text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-3">Semantic Layout Overrides</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <ColorField
                           label="Main Canvas Background"
@@ -481,8 +476,8 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="border-t border-black/[0.04] pt-4">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">System Alerts & Text</p>
+                    <div className="border-t border-[#e6ebf8] pt-4">
+                      <p className="text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-3">System Alerts & Text</p>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <ColorField label="Success Status" compact hex={form.successHex} onChange={hex => handleFormChange({ successHex: hex })} />
                         <ColorField label="Warning Status" compact hex={form.warningHex} onChange={hex => handleFormChange({ warningHex: hex })} />
@@ -497,17 +492,17 @@ export default function SettingsPage() {
                   <div className="flex flex-col gap-5">
                     {/* Fonts Family Selector */}
                     <div>
-                      <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Standard Font Family</label>
+                      <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5">Standard Font Family</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {FONT_OPTIONS.map(font => (
                           <button
                             key={font.value}
                             onClick={() => handleFormChange({ fontFamily: font.value as "Inter" | "Segoe UI" | "Roboto" | "IBM Plex Sans" | "System-UI" })}
                             className={cn(
-                              "px-3 py-2 rounded-xl text-left border text-xs font-semibold transition-all",
+                              "px-3 py-2 rounded-[4px] text-left border text-[0.75rem] uppercase tracking-[0.08em] font-semibold transition-all",
                               form.fontFamily === font.value
-                                ? "bg-primary/5 border-primary text-primary"
-                                : "border-border text-muted-foreground hover:bg-black/[0.01]"
+                                ? "bg-[#f0f1f7] border-[#3c67ea] text-[#3c67ea]"
+                                : "border-[#e6ebf8] text-[#485478] hover:bg-[#f0f1f7]"
                             )}
                           >
                             {font.label}
@@ -518,17 +513,17 @@ export default function SettingsPage() {
 
                     {/* Density Control */}
                     <div>
-                      <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5 font-sans">Layout Spacing Density</label>
+                      <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5 font-sans">Layout Spacing Density</label>
                       <div className="grid grid-cols-3 gap-2">
                         {DENSITY_OPTIONS.map(density => (
                           <button
                             key={density.value}
                             onClick={() => handleFormChange({ density: density.value as "compact" | "comfortable" | "spacious" })}
                             className={cn(
-                              "px-3 py-2 rounded-xl text-center border text-xs font-semibold transition-all",
+                              "px-3 py-2 rounded-[4px] text-center border text-[0.75rem] uppercase tracking-[0.08em] font-semibold transition-all",
                               form.density === density.value
-                                ? "bg-primary/5 border-primary text-primary"
-                                : "border-border text-muted-foreground hover:bg-black/[0.01]"
+                                ? "bg-[#f0f1f7] border-[#3c67ea] text-[#3c67ea]"
+                                : "border-[#e6ebf8] text-[#485478] hover:bg-[#f0f1f7]"
                             )}
                           >
                             {density.label}
@@ -539,17 +534,17 @@ export default function SettingsPage() {
 
                     {/* Corner Radius */}
                     <div>
-                      <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5 font-sans">Component Corner Radius</label>
+                      <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5 font-sans">Component Corner Radius</label>
                       <div className="grid grid-cols-4 gap-2">
                         {RADIUS_OPTIONS.map(opt => (
                           <button
                             key={opt.value}
                             onClick={() => handleFormChange({ radius: opt.value })}
                             className={cn(
-                              "px-3 py-2 rounded-xl text-center border text-xs font-semibold transition-all",
+                              "px-3 py-2 rounded-[4px] text-center border text-[0.75rem] uppercase tracking-[0.08em] font-semibold transition-all",
                               form.radius === opt.value
-                                ? "bg-primary/5 border-primary text-primary"
-                                : "border-border text-muted-foreground hover:bg-black/[0.01]"
+                                ? "bg-[#f0f1f7] border-[#3c67ea] text-[#3c67ea]"
+                                : "border-[#e6ebf8] text-[#485478] hover:bg-[#f0f1f7]"
                             )}
                           >
                             {opt.label}
@@ -564,17 +559,17 @@ export default function SettingsPage() {
                   <div className="flex flex-col gap-5">
                     {/* Navigation Drawer Skins */}
                     <div>
-                      <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Sidebar Layout Variants</label>
+                      <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5">Sidebar Layout Variants</label>
                       <div className="grid grid-cols-2 gap-2">
                         {SIDEBAR_VARIANTS.map(variant => (
                           <button
                             key={variant.value}
                             onClick={() => handleFormChange({ sidebarVariant: variant.value as "dark" | "light" | "transparent" | "glassmorphic" | "gradient" | "floating" })}
                             className={cn(
-                              "px-3 py-2.5 rounded-xl text-left border text-xs font-semibold transition-all",
+                              "px-3 py-2.5 rounded-[4px] text-left border text-[0.75rem] uppercase tracking-[0.08em] font-semibold transition-all",
                               form.sidebarVariant === variant.value
-                                ? "bg-primary/5 border-primary text-primary"
-                                : "border-border text-muted-foreground hover:bg-black/[0.01]"
+                                ? "bg-[#f0f1f7] border-[#3c67ea] text-[#3c67ea]"
+                                : "border-[#e6ebf8] text-[#485478] hover:bg-[#f0f1f7]"
                             )}
                           >
                             {variant.label}
@@ -585,17 +580,17 @@ export default function SettingsPage() {
 
                     {/* Animation Motion */}
                     <div>
-                      <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5 font-sans">Transitions & Motion Systems</label>
+                      <label className="block text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em] mb-1.5 font-sans">Transitions & Motion Systems</label>
                       <div className="grid grid-cols-2 gap-2">
                         {MOTION_OPTIONS.map(motionOpt => (
                           <button
                             key={motionOpt.value}
                             onClick={() => handleFormChange({ motion: motionOpt.value as "none" | "reduced" | "normal" | "premium" })}
                             className={cn(
-                              "px-3 py-2 rounded-xl text-left border text-xs font-semibold transition-all",
+                              "px-3 py-2 rounded-[4px] text-left border text-[0.75rem] uppercase tracking-[0.08em] font-semibold transition-all",
                               form.motion === motionOpt.value
-                                ? "bg-primary/5 border-primary text-primary"
-                                : "border-border text-muted-foreground hover:bg-black/[0.01]"
+                                ? "bg-[#f0f1f7] border-[#3c67ea] text-[#3c67ea]"
+                                : "border-[#e6ebf8] text-[#485478] hover:bg-[#f0f1f7]"
                             )}
                           >
                             {motionOpt.label}
@@ -609,16 +604,16 @@ export default function SettingsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-black/[0.03] bg-muted/10">
+              <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#e6ebf8] bg-[#f0f1f7]">
                 <button
                   onClick={resetForm}
-                  className="px-4 py-2 rounded-xl border border-border bg-white text-xs font-semibold text-muted-foreground hover:bg-black/[0.03] transition-colors"
+                  className="px-4 py-2 rounded-[4px] border border-[#e6ebf8] bg-white text-[0.75rem] uppercase tracking-[0.08em] font-semibold text-[#485478] hover:bg-[#f0f1f7] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-95 transition-opacity flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-[4px] bg-[#3c67ea] text-white text-[0.75rem] uppercase tracking-[0.08em] font-semibold hover:opacity-95 transition-opacity flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" />
                   {editingTheme ? "Update Custom Preset" : "Apply & Save Theme"}
@@ -632,26 +627,26 @@ export default function SettingsPage() {
 
         {/* RIGHT COLUMN: Global Live Preview (5 Cols) */}
         <div className="lg:col-span-5 flex flex-col gap-4">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4 text-primary" />
+          <p className="text-[0.75rem] uppercase tracking-[0.08em] font-semibold text-[#485478] tracking-[0.08em] flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-[#3c67ea]" />
             Global Live Preview
           </p>
 
           <div
-            className="w-full border border-black/[0.08] shadow-lg flex flex-col h-[680px] overflow-hidden"
+            className="w-full border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] flex flex-col h-[680px] overflow-hidden"
             style={{ borderRadius: form.radius }}
           >
             {/* Embedded Shell Header */}
-            <div className="px-3.5 py-3 border-b border-black/[0.05] bg-white flex items-center justify-between">
+            <div className="px-3.5 py-3 border-b border-[#e6ebf8] bg-white flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
-                <span className="w-2.5 h-2.5 rounded-full bg-warning" />
-                <span className="w-2.5 h-2.5 rounded-full bg-success" />
-                <span className="text-[10px] text-muted-foreground/60 font-mono ml-2">Console Shell v4.0.0</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#db3743]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbb16]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#14a687]" />
+                <span className="text-[0.75rem] text-[#485478] font-mono ml-2">Console Shell v4.0.0</span>
               </div>
 
               {/* Mini theme label dot */}
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-semibold px-2 py-0.5 bg-black/[0.03] rounded-lg">
+              <div className="flex items-center gap-1 text-[0.75rem] text-[#485478] font-semibold px-2 py-0.5 bg-[#f0f1f7] rounded-[4px]">
                 Active: {form.name || "Default"}
               </div>
             </div>
@@ -661,39 +656,39 @@ export default function SettingsPage() {
               
               {/* Embedded Shell Sidebar */}
               <div
-                className="w-36 flex flex-col p-3 border-r border-black/[0.06] transition-all"
+                className="w-36 flex flex-col p-3 border-r border-[#e6ebf8] transition-all"
                 style={{
                   background: form.sidebarVariant === "transparent" ? "rgba(255,255,255,0.02)" : form.sidebarHex,
                   color: form.sidebarVariant === "light" ? "#1e293b" : "#f1f5f9"
                 }}
               >
                 {/* Simulated Logo */}
-                <div className="flex items-center gap-2 px-1 mb-4 border-b border-white/[0.06] pb-3">
-                  <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px]">
+                <div className="flex items-center gap-2 px-1 mb-4 border-b border-[#e6ebf8] pb-3">
+                  <div className="w-6 h-6 rounded bg-[#3c67ea] text-white flex items-center justify-center font-semibold text-[0.75rem]">
                     {form.name ? form.name.slice(0, 2).toUpperCase() : "LZ"}
                   </div>
-                  <span className="text-[11px] font-bold truncate">
+                  <span className="text-[0.75rem] font-semibold truncate">
                     {form.name || "Lyzr AI"}
                   </span>
                 </div>
 
                 {/* Sidebar Navigation items */}
                 <div className="flex flex-col gap-1 flex-1">
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/20 text-primary font-bold text-[10px] cursor-pointer">
-                    <LayoutGrid className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-[4px] bg-[#f0f1f7] text-[#3c67ea] font-semibold text-[0.75rem] cursor-pointer">
+                    <LayoutGrid className="w-3.5 h-3.5 text-[#3c67ea] flex-shrink-0" />
                     Dashboard
                   </div>
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] opacity-70 hover:opacity-100 cursor-pointer">
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-[4px] text-[0.75rem] opacity-70 hover:opacity-100 cursor-pointer">
                     <Send className="w-3.5 h-3.5 flex-shrink-0" />
                     Agent Console
                   </div>
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] opacity-70 hover:opacity-100 cursor-pointer">
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-[4px] text-[0.75rem] opacity-70 hover:opacity-100 cursor-pointer">
                     <Settings className="w-3.5 h-3.5 flex-shrink-0" />
                     Settings
                   </div>
                 </div>
 
-                <div className="text-[9px] opacity-40 px-2 font-mono">Powered by AgenticOS</div>
+                <div className="text-[0.75rem] opacity-40 px-2 font-mono">Powered by AgenticOS</div>
               </div>
 
               {/* Embedded Shell Content Canvas */}
@@ -710,13 +705,13 @@ export default function SettingsPage() {
                 }}
               >
                 {/* Page Title */}
-                <div className="flex items-center justify-between border-b border-black/[0.04] pb-2">
+                <div className="flex items-center justify-between border-b border-[#e6ebf8] pb-2">
                   <div>
-                    <h3 className="font-bold text-foreground">Client Console</h3>
-                    <p className="text-[10px] text-muted-foreground">Standardized theme workspace canvas</p>
+                    <h3 className="font-semibold text-[#242d48]">Client Console</h3>
+                    <p className="text-[0.75rem] text-[#485478]">Standardized theme workspace canvas</p>
                   </div>
                   <button
-                    className="text-white text-[10px] px-2.5 py-1 font-bold flex items-center gap-1 shadow-sm transition-opacity"
+                    className="text-white text-[0.75rem] px-2.5 py-1 font-semibold flex items-center gap-1 shadow-[0_2px_4px_rgba(36,45,72,0.15)] transition-opacity"
                     style={{
                       background: `linear-gradient(135deg, ${form.primaryHex}, ${form.gradientEndHex})`,
                       borderRadius: `calc(${form.radius} * 0.6)`
@@ -729,13 +724,13 @@ export default function SettingsPage() {
 
                 {/* Simulated Metrics Card */}
                 <div
-                  className="glass-card p-3 flex flex-col gap-1 border border-black/[0.05]"
+                  className="bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-3 flex flex-col gap-1 border border-[#e6ebf8]"
                   style={{ borderRadius: `calc(${form.radius} * 0.7)` }}
                 >
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Agent Efficiency Rate</p>
+                  <p className="text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em]">Agent Efficiency Rate</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-black text-foreground">98.4%</span>
-                    <span className="text-[9px] text-success font-bold">+1.2% this week</span>
+                    <span className="text-[1rem] leading-[1.2] font-black text-[#242d48]">98.4%</span>
+                    <span className="text-[0.75rem] text-[#14a687] font-semibold">+1.2% this week</span>
                   </div>
 
                   {/* SVG Dynamic Theme Chart */}
@@ -764,49 +759,49 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-2">
                   {/* Card 1: Buttons */}
                   <div
-                    className="p-3 bg-white border border-black/[0.05] flex flex-col gap-2"
+                    className="p-3 bg-white border border-[#e6ebf8] flex flex-col gap-2"
                     style={{ borderRadius: `calc(${form.radius} * 0.6)` }}
                   >
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Buttons & Badges</p>
+                    <p className="text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em]">Buttons & Badges</p>
                     <div className="flex flex-col gap-1.5">
                       <button
-                        className="w-full text-white text-[9px] font-bold py-1 px-2"
+                        className="w-full text-white text-[0.75rem] font-semibold py-1 px-2"
                         style={{ background: form.primaryHex, borderRadius: `calc(${form.radius} * 0.4)` }}
                       >
                         Primary Action
                       </button>
                       <button
-                        className="w-full text-white text-[9px] font-bold py-1 px-2"
+                        className="w-full text-white text-[0.75rem] font-semibold py-1 px-2"
                         style={{ background: form.accentHex, borderRadius: `calc(${form.radius} * 0.4)` }}
                       >
                         Secondary / Highlight
                       </button>
                       <div className="flex gap-1.5 mt-0.5">
-                        <span className="px-2 py-0.5 rounded text-[8px] font-bold text-white" style={{ background: form.successHex }}>Success</span>
-                        <span className="px-2 py-0.5 rounded text-[8px] font-bold text-white" style={{ background: form.errorHex }}>Error</span>
+                        <span className="px-2 py-0.5 rounded text-[0.75rem] font-semibold text-white" style={{ background: form.successHex }}>Success</span>
+                        <span className="px-2 py-0.5 rounded text-[0.75rem] font-semibold text-white" style={{ background: form.errorHex }}>Error</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Card 2: Glass Inputs */}
                   <div
-                    className="p-3 bg-white border border-black/[0.05] flex flex-col gap-2"
+                    className="p-3 bg-white border border-[#e6ebf8] flex flex-col gap-2"
                     style={{ borderRadius: `calc(${form.radius} * 0.6)` }}
                   >
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Interactive Forms</p>
+                    <p className="text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em]">Interactive Forms</p>
                     <div className="flex flex-col gap-1.5">
                       <input
                         type="text"
                         readOnly
                         value="Glass Textbox Focus..."
                         style={{ borderRadius: `calc(${form.radius} * 0.4)`, borderColor: form.primaryHex }}
-                        className="w-full px-2 py-1 text-[9px] bg-white border focus:outline-none"
+                        className="w-full px-2 py-1 text-[0.75rem] bg-white border focus:outline-none"
                       />
                       <div className="flex items-center gap-1.5">
-                        <span className="w-3.5 h-3.5 rounded border border-border bg-white flex items-center justify-center text-white" style={{ background: form.primaryHex, borderRadius: `calc(${form.radius} * 0.2)` }}>
+                        <span className="w-3.5 h-3.5 rounded border border-[#e6ebf8] bg-white flex items-center justify-center text-white" style={{ background: form.primaryHex, borderRadius: `calc(${form.radius} * 0.2)` }}>
                           <CheckSquare className="w-2.5 h-2.5 text-white" />
                         </span>
-                        <span className="text-[9px] text-muted-foreground">Standardized toggle</span>
+                        <span className="text-[0.75rem] text-[#485478]">Standardized toggle</span>
                       </div>
                     </div>
                   </div>
@@ -814,27 +809,27 @@ export default function SettingsPage() {
 
                 {/* Dynamic Table Showcase */}
                 <div
-                  className="bg-white border border-black/[0.05] overflow-hidden"
+                  className="bg-white border border-[#e6ebf8] overflow-hidden"
                   style={{ borderRadius: `calc(${form.radius} * 0.6)` }}
                 >
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-black/[0.02] border-b border-black/[0.05] text-[9px] font-bold text-muted-foreground">
+                      <tr className="bg-[#f0f1f7] border-b border-[#e6ebf8] text-[0.75rem] font-semibold text-[#485478]">
                         <th className="px-2 py-1">Agent ID</th>
                         <th className="px-2 py-1">Role</th>
                         <th className="px-2 py-1 text-right">Activity</th>
                       </tr>
                     </thead>
-                    <tbody className="text-[9px] font-mono">
-                      <tr className="border-b border-black/[0.03]">
-                        <td className="px-2 py-1.5 font-bold text-foreground">Survey Gen</td>
+                    <tbody className="text-[0.75rem] font-mono">
+                      <tr className="border-b border-[#e6ebf8]">
+                        <td className="px-2 py-1.5 font-semibold text-[#242d48]">Survey Gen</td>
                         <td className="px-2 py-1.5">Collector</td>
-                        <td className="px-2 py-1.5 text-right text-success font-semibold">Active</td>
+                        <td className="px-2 py-1.5 text-right text-[#14a687] font-semibold">Active</td>
                       </tr>
                       <tr>
-                        <td className="px-2 py-1.5 font-bold text-foreground">Synthesis</td>
+                        <td className="px-2 py-1.5 font-semibold text-[#242d48]">Synthesis</td>
                         <td className="px-2 py-1.5">Summarizer</td>
-                        <td className="px-2 py-1.5 text-right text-muted-foreground">Muted</td>
+                        <td className="px-2 py-1.5 text-right text-[#485478]">Muted</td>
                       </tr>
                     </tbody>
                   </table>
@@ -844,6 +839,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
@@ -864,7 +860,7 @@ function ColorField({
 }) {
   return (
     <div className={cn("flex flex-col", compact ? "gap-1" : "gap-1.5")}>
-      <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+      <label className="text-[0.75rem] font-semibold text-[#485478] uppercase tracking-[0.08em]">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -876,7 +872,7 @@ function ColorField({
             className="sr-only"
           />
           <span
-            className="w-8 h-8 rounded-xl border-2 border-white shadow-md block ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
+            className="w-8 h-8 rounded-[4px] border-2 border-white shadow-[0_2px_4px_rgba(36,45,72,0.15)] block ring-1 ring-black/10 transition-transform hover:scale-105 active:scale-95"
             style={{ background: hex }}
           />
         </label>
@@ -887,11 +883,11 @@ function ColorField({
             const v = e.target.value;
             if (/^#[0-9a-fA-F]{0,6}$/.test(v)) onChange(v);
           }}
-          className="glass-input rounded-xl px-2.5 py-1.5 text-xs font-mono text-foreground outline-none w-24 shrink-0 border border-border"
+          className="bg-[#f8f8fa] border-2 border-dotted border-transparent shadow-[0_0_0_1px_#7885ab] focus:border-[#485478] focus:shadow-none rounded-[4px] px-2.5 py-1.5 text-[0.75rem] uppercase tracking-[0.08em] font-mono text-[#242d48] outline-none w-24 shrink-0 border border-[#e6ebf8]"
         />
       </div>
       {description && !compact && (
-        <p className="text-[9px] text-muted-foreground/80 mt-0.5 leading-normal">{description}</p>
+        <p className="text-[0.75rem] text-[#485478] mt-0.5 leading-[1.2]">{description}</p>
       )}
     </div>
   );

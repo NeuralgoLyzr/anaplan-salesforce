@@ -311,12 +311,13 @@ export function groupBySeverity(anomalies: Anomaly[]): { severity: Severity; ite
   })).filter((g) => g.items.length > 0);
 }
 
+// ADS Badge: bg-white, solid hex border+text, 2px radius, uppercase
 export const SEVERITY_STYLE: Record<Severity, { pill: string; dot: string; label: string }> = {
-  critical: { pill: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive", label: "Critical" },
-  high:     { pill: "bg-warning/10 text-warning border-warning/20", dot: "bg-warning", label: "High" },
-  medium:   { pill: "bg-warning/10 text-warning border-warning/20", dot: "bg-warning", label: "Medium" },
-  low:      { pill: "bg-slate-400/10 text-slate-500 border-slate-300/30", dot: "bg-slate-400", label: "Low" },
-  info:     { pill: "bg-primary/10 text-primary border-primary/20", dot: "bg-primary", label: "Info" },
+  critical: { pill: "bg-white text-[#db3743] border-[#db3743]",   dot: "bg-[#db3743]", label: "Critical" },
+  high:     { pill: "bg-white text-[#ffbb16] border-[#ffbb16]",   dot: "bg-[#ffbb16]", label: "High"     },
+  medium:   { pill: "bg-white text-[#ffbb16] border-[#ffbb16]",   dot: "bg-[#ffbb16]", label: "Medium"   },
+  low:      { pill: "bg-[#f0f1f7] text-[#485478] border-[#e6ebf8]", dot: "bg-[#909cc0]", label: "Low"   },
+  info:     { pill: "bg-[#e6ebf8] text-[#3c67ea] border-[#e6ebf8]", dot: "bg-[#3c67ea]", label: "Info"  },
 };
 
 // ─── Action items (Agent 3) ──────────────────────────────────────

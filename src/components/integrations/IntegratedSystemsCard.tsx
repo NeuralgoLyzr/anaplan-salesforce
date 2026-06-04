@@ -21,12 +21,12 @@ export function IntegratedSystemsCard({
   const totalCount = items.length;
 
   return (
-    <div className={cn("glass-card rounded-xl px-4 py-3 w-fit max-w-full", className)}>
+    <div className={cn("bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] rounded-[4px] px-4 py-3 w-fit max-w-full", className)}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-foreground/70">
+        <p className="text-[0.75rem] font-semibold uppercase text-[#242d48]">
           Integrated Systems
         </p>
-        <p className="text-[12px] text-muted-foreground tabular-nums">
+        <p className="text-[0.75rem] text-[#485478] tabular-nums">
           {connectedCount}/{totalCount} connected
         </p>
       </div>
@@ -36,8 +36,8 @@ export function IntegratedSystemsCard({
           <div
             key={tool.id}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-full border bg-background/40 backdrop-blur shrink-0",
-              tool.connected ? "border-success/20" : "border-muted-foreground/15"
+              "flex items-center gap-2 px-3 py-2 rounded-[2px] border bg-[#f0f1f7]  shrink-0",
+              tool.connected ? "border-[#14a687]" : "border-[#e6ebf8]-foreground/15"
             )}
             title={tool.name}
           >
@@ -47,13 +47,13 @@ export function IntegratedSystemsCard({
               alt={tool.name}
               className="w-5 h-5 rounded object-contain bg-white"
             />
-            <span className="text-[12px] font-medium text-foreground/80 whitespace-nowrap">
+            <span className="text-[0.75rem] font-medium text-[#242d48] whitespace-nowrap">
               {tool.name}
             </span>
             {tool.connected ? (
-              <CheckCircle2 className="w-4 h-4 text-success" />
+              <CheckCircle2 className="w-4 h-4 text-[#14a687]" />
             ) : (
-              <XCircle className="w-4 h-4 text-muted-foreground/50" />
+              <XCircle className="w-4 h-4 text-[#485478]" />
             )}
           </div>
         ))}

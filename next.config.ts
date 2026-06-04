@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
     appIsrStatus: false,
     buildActivity: false,
   },
+  // Allow next/image to serve local static assets (logos, icons) without
+  // requiring explicit remote domain configuration.
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

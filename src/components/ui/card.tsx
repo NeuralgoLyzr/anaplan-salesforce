@@ -2,14 +2,24 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// Anaplan Design System Card — exact ADS spec:
+// 4px radius, white bg, 1px solid #E6EBF8 border, L1 shadow.
+// Header: 16px padding, flex row, space-between.
+// Body: 0 16px 16px padding.
+// Footer: 16px padding, flex row.
+// subtle prop: border only, no shadow (ADS subtle variant).
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & { subtle?: boolean }
+>(({ className, subtle = false, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
+      "rounded-[4px] bg-white text-[#242d48] w-full border border-[#e6ebf8]",
+      subtle
+        ? ""
+        : "shadow-[0_2px_4px_rgba(36,45,72,0.15)]",
       className
     )}
     {...props}
@@ -23,7 +33,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("flex items-center justify-between p-4", className)}
     {...props}
   />
 ))
@@ -35,7 +45,11 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
+    // ADS: apple token — 1rem/16px, weight 600, line-height 1.2, no tracking
+    className={cn(
+      "text-[1rem] font-semibold leading-[1.2] text-[#242d48] overflow-hidden text-ellipsis whitespace-nowrap",
+      className
+    )}
     {...props}
   />
 ))
@@ -47,7 +61,8 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    // ADS: kiwi token — 0.875rem/14px, weight 400, #485478
+    className={cn("text-[0.875rem] font-normal leading-[1.2] text-[#485478]", className)}
     {...props}
   />
 ))
@@ -57,7 +72,8 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  // ADS body padding: 0 16px 16px
+  <div ref={ref} className={cn("px-4 pb-4", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -65,9 +81,10 @@ const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
+  // ADS footer: 16px padding, flex row
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
+    className={cn("flex items-center p-4 pt-0", className)}
     {...props}
   />
 ))

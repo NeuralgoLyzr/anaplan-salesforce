@@ -1,16 +1,10 @@
 "use client";
-
 import { useState } from "react";
-import {
-  GitBranch, RefreshCw, Clock, Ban, CheckCircle, CheckCircle2,
-  ListChecks, Loader2, XCircle, AlertTriangle, AlertCircle,
-} from "lucide-react";
+import { GitBranch, RefreshCw, Clock, Ban, CheckCircle, CheckCircle2, ListChecks, XCircle, AlertTriangle, AlertCircle,  } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
+import { Loader } from "@/components/ui/loader";
 // ── Types ─────────────────────────────────────────────────────────────────────
-
 interface JiraIssue {
   id: string;
   key: string;
@@ -23,48 +17,41 @@ interface JiraIssue {
   subtasksTotal: number;
   updatedAt: string;
 }
-
 // ── Config ────────────────────────────────────────────────────────────────────
-
 const COLUMN_ORDER = ["In Progress", "Cancelled", "Under Review", "Rejected", "Approved", "Done"];
-
 const COLUMN_STYLE: Record<string, {
   bg: string; border: string; badge: string; dot: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = {
-  "In Progress":  { bg: "bg-primary/10",     border: "border-primary/30",     badge: "bg-primary/10 text-primary",      dot: "bg-primary",     icon: Loader2       },
-  "Cancelled":    { bg: "bg-warning/10",   border: "border-warning/30",  badge: "bg-warning/10 text-warning", dot: "bg-warning",  icon: XCircle       },
-  "Under Review": { bg: "bg-primary/10",     border: "border-primary/30",    badge: "bg-primary/10 text-primary",    dot: "bg-primary",    icon: Clock         },
-  "Rejected":     { bg: "bg-destructive/10",      border: "border-destructive/30",     badge: "bg-destructive/10 text-destructive",      dot: "bg-destructive",     icon: AlertTriangle },
-  "Approved":     { bg: "bg-warning/10",    border: "border-warning/30",   badge: "bg-warning/10 text-warning",  dot: "bg-warning",   icon: CheckCircle   },
-  "Done":         { bg: "bg-success/10",    border: "border-success/30",   badge: "bg-success/10 text-success",  dot: "bg-success",   icon: CheckCircle   },
+  "In Progress":  { bg: "bg-[#f0f1f7]",     border: "border-[#e6ebf8]",     badge: "bg-[#f0f1f7] text-[#3c67ea]",      dot: "bg-[#3c67ea]",     icon: Loader       },
+  "Cancelled":    { bg: "bg-white",   border: "border-[#ffbb16]",  badge: "bg-white text-[#ffbb16]", dot: "bg-[#ffbb16]",  icon: XCircle       },
+  "Under Review": { bg: "bg-[#f0f1f7]",     border: "border-[#e6ebf8]",    badge: "bg-[#f0f1f7] text-[#3c67ea]",    dot: "bg-[#3c67ea]",    icon: Clock         },
+  "Rejected":     { bg: "bg-white",      border: "border-[#db3743]",     badge: "bg-white text-[#db3743]",      dot: "bg-[#db3743]",     icon: AlertTriangle },
+  "Approved":     { bg: "bg-white",    border: "border-[#ffbb16]",   badge: "bg-white text-[#ffbb16]",  dot: "bg-[#ffbb16]",   icon: CheckCircle   },
+  "Done":         { bg: "bg-white",    border: "border-[#14a687]",   badge: "bg-white text-[#14a687]",  dot: "bg-[#14a687]",   icon: CheckCircle   },
 };
-
 // Solid-fill transition buttons — exact EmailSense AI style
 const JIRA_NEXT_STEPS: Record<string, { label: string; status: string; color: string }[]> = {
   "In Progress":  [
-    { label: "Cancel", status: "Cancelled",    color: "bg-warning hover:bg-warning text-white" },
-    { label: "Review", status: "Under Review", color: "bg-primary hover:bg-primary text-white"    },
+    { label: "Cancel", status: "Cancelled",    color: "bg-[#ffbb16] hover:bg-[#ffbb16] text-white" },
+    { label: "Review", status: "Under Review", color: "bg-[#3c67ea] hover:bg-[#3c67ea] text-white"    },
   ],
   "Under Review": [
-    { label: "Reject",  status: "Rejected", color: "bg-destructive hover:bg-destructive text-white"    },
-    { label: "Approve", status: "Approved", color: "bg-warning hover:bg-warning text-white" },
+    { label: "Reject",  status: "Rejected", color: "bg-[#db3743] hover:bg-[#db3743] text-white"    },
+    { label: "Approve", status: "Approved", color: "bg-[#ffbb16] hover:bg-[#ffbb16] text-white" },
   ],
-  "Approved":  [{ label: "Done",   status: "Done",        color: "bg-success hover:bg-success text-white" }],
-  "Rejected":  [{ label: "Reopen", status: "In Progress", color: "bg-primary hover:bg-primary text-white"    }],
-  "Cancelled": [{ label: "Reopen", status: "In Progress", color: "bg-primary hover:bg-primary text-white"    }],
+  "Approved":  [{ label: "Done",   status: "Done",        color: "bg-[#14a687] hover:bg-[#14a687] text-white" }],
+  "Rejected":  [{ label: "Reopen", status: "In Progress", color: "bg-[#3c67ea] hover:bg-[#3c67ea] text-white"    }],
+  "Cancelled": [{ label: "Reopen", status: "In Progress", color: "bg-[#3c67ea] hover:bg-[#3c67ea] text-white"    }],
 };
-
 const PRIORITY_COLOR: Record<string, string> = {
-  Highest: "text-destructive",
-  High:    "text-warning",
-  Medium:  "text-warning",
-  Low:     "text-primary",
-  Lowest:  "text-slate-400",
+  Highest: "text-[#db3743]",
+  High:    "text-[#ffbb16]",
+  Medium:  "text-[#ffbb16]",
+  Low:     "text-[#3c67ea]",
+  Lowest:  "text-[#909cc0]",
 };
-
 // ── Sample data ───────────────────────────────────────────────────────────────
-
 const INITIAL_ISSUES: JiraIssue[] = [
   { id: "1",  key: "EMAIL-80", summary: "OAuth 2.0 authentication flow",               subject: "Auth token refresh failing on logout",     priority: "Highest", status: "In Progress",  assignee: "AM", subtasksDone: 3,  subtasksTotal: 8,  updatedAt: "May 21" },
   { id: "2",  key: "EMAIL-81", summary: "REST API endpoints for user module",          subject: "User profile update endpoint 500 error",   priority: "High",    status: "In Progress",  assignee: "DT", subtasksDone: 1,  subtasksTotal: 5,  updatedAt: "May 20" },
@@ -80,9 +67,7 @@ const INITIAL_ISSUES: JiraIssue[] = [
   { id: "12", key: "EMAIL-91", summary: "Datadog APM latency alerts configuration",  subject: "Alert threshold too sensitive, false pages", priority: "Low",    status: "Approved",     assignee: "DO", subtasksDone: 3,  subtasksTotal: 3,  updatedAt: "May 22" },
   { id: "13", key: "EMAIL-92", summary: "Cross-browser testing Chrome/Firefox/Safari", subject: "Safari: date picker component broken",   priority: "High",    status: "Under Review", assignee: "QA", subtasksDone: 4,  subtasksTotal: 8,  updatedAt: "May 21" },
 ];
-
 // ── Issue Card (EmailSense AI style) ──────────────────────────────────────────
-
 function IssueCard({
   issue,
   onTransition,
@@ -91,61 +76,53 @@ function IssueCard({
   onTransition: (id: string, status: string) => void;
 }) {
   const steps = JIRA_NEXT_STEPS[issue.status] ?? [];
-  const priorityColor = PRIORITY_COLOR[issue.priority] ?? "text-slate-400";
-
+  const priorityColor = PRIORITY_COLOR[issue.priority] ?? "text-[#909cc0]";
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.10)" }}
-      className="bg-card rounded-lg border border-border p-3 transition-all cursor-default"
-    >
-      {/* Summary */}
-      <p className="text-xs font-semibold text-foreground leading-snug line-clamp-2">
+    // ADS Card: 4px radius, white bg, #E6EBF8 border, L1 shadow
+    <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-3 cursor-default">
+      {/* ADS: pear 14px/600 */}
+      <p className="text-[0.875rem] font-semibold text-[#242d48] leading-[1.2] line-clamp-2">
         {issue.summary}
       </p>
-
-      {/* Subject */}
-      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
+      {/* ADS: cranberry 13px/400, #485478 */}
+      <p className="text-[0.8125rem] font-normal text-[#485478] leading-[1.2] mt-1 line-clamp-1">
         {issue.subject}
       </p>
-
-      {/* Meta row: key + priority + subtasks + avatar */}
-      <div className="flex items-center justify-between mt-2.5 gap-2">
+      <div className="flex items-center justify-between mt-2 gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-black text-primary bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5 uppercase tracking-wider font-mono">
+          {/* ADS Badge: 2px radius, uppercase, outlined */}
+          <span className="text-[0.75rem] font-medium text-[#3c67ea] border border-[#3c67ea] rounded-[2px] px-1">
             {issue.key}
           </span>
           <AlertCircle className={cn("w-3 h-3 flex-shrink-0", priorityColor)} />
-          <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground font-semibold">
+          <span className="flex items-center gap-0.5 text-[0.75rem] font-normal text-[#485478]">
             <ListChecks className="w-3 h-3" />
             {issue.subtasksDone}/{issue.subtasksTotal}
           </span>
         </div>
+        {/* ADS Avatar: 33% radius, #485478 bg, white text */}
         <div
-          className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0"
+          className="w-6 h-6 flex items-center justify-center flex-shrink-0 bg-[#485478] text-white text-[0.75rem] font-semibold"
+          style={{ borderRadius: "33%" }}
           title={issue.assignee}
         >
-          <span className="text-[8px] font-black text-primary-foreground uppercase">
-            {issue.assignee}
-          </span>
+          {issue.assignee}
         </div>
       </div>
-
-      {/* Updated date */}
-      <p className="text-[9px] text-muted-foreground font-medium mt-1.5">
+      {/* ADS: cranberry 13px/400, #485478 */}
+      <p className="text-[0.8125rem] font-normal text-[#485478] leading-[1.2] mt-1">
         Updated {issue.updatedAt}
       </p>
-
-      {/* Transition buttons — solid fill, exact EmailSense AI style */}
+      {/* Transition buttons — ADS Button variants */}
       {steps.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-border flex items-center gap-1.5 flex-wrap">
+        <div className="mt-2 pt-2 border-t border-[#e6ebf8] flex items-center gap-1.5 flex-wrap">
           {steps.map(step => (
             <button
               key={step.status}
               onClick={() => onTransition(issue.id, step.status)}
               className={cn(
-                "px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all",
+                // ADS: 2px radius, 8px×16px padding, 14px/600, transition
+                "px-4 py-2 rounded-[2px] text-[0.875rem] font-semibold leading-[1.2] transition-all duration-200",
                 step.color
               )}
             >
@@ -154,12 +131,10 @@ function IssueCard({
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
-
 // ── Board Column ──────────────────────────────────────────────────────────────
-
 function BoardColumn({
   name,
   issues,
@@ -170,50 +145,45 @@ function BoardColumn({
   onTransition: (id: string, status: string) => void;
 }) {
   const style = COLUMN_STYLE[name] ?? {
-    bg: "bg-slate-50", border: "border-slate-200",
-    badge: "bg-slate-100 text-slate-700", dot: "bg-slate-400", icon: AlertCircle,
+    bg: "bg-[#f8f8fa]", border: "border-[#e6ebf8]",
+    badge: "border-[#485478] text-[#485478]", dot: "bg-[#909cc0]", icon: AlertCircle,
   };
-
   return (
     <div className="flex flex-col min-w-[220px] flex-1">
-      {/* Column header */}
-      <div className={cn("flex items-center justify-between px-3 py-2 rounded-lg border mb-2", style.bg, style.border)}>
+      {/* ADS column header: white bg, #E6EBF8 border, 4px radius */}
+      <div className="flex items-center justify-between px-3 py-2 rounded-[4px] bg-white border border-[#e6ebf8] mb-2">
         <div className="flex items-center gap-2">
-          <span className={cn("w-2 h-2 rounded-full flex-shrink-0", style.dot)} />
-          <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">
+          <span className={cn("w-2 h-2 flex-shrink-0 rounded-full", style.dot)} />
+          {/* ADS: blueberry 12px/500 UPPERCASE */}
+          <span className="text-[0.75rem] font-medium text-[#242d48] leading-[1.2]">
             {name}
           </span>
         </div>
-        <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full", style.badge)}>
+        {/* ADS Badge: 2px radius, outlined */}
+        <span className={cn("text-[0.75rem] font-medium px-1 rounded-[2px] border", style.badge)}>
           {issues.length}
         </span>
       </div>
-
       {/* Cards */}
       <div className="flex flex-col gap-2 flex-1 min-h-[120px]">
-        <AnimatePresence>
-          {issues.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center rounded-lg border-2 border-dashed border-border py-8">
-              <span className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-widest">
-                No issues
-              </span>
-            </div>
-          ) : (
-            issues.map(issue => (
-              <IssueCard key={issue.id} issue={issue} onTransition={onTransition} />
-            ))
-          )}
-        </AnimatePresence>
+        {issues.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center rounded-[4px] border border-dashed border-[#e6ebf8] py-8">
+            <span className="text-[0.875rem] font-normal text-[#909cc0] leading-[1.2]">
+              No issues
+            </span>
+          </div>
+        ) : (
+          issues.map(issue => (
+            <IssueCard key={issue.id} issue={issue} onTransition={onTransition} />
+          ))
+        )}
       </div>
     </div>
   );
 }
-
 // ── Page ──────────────────────────────────────────────────────────────────────
-
 export default function PipelinePage() {
   const [issues, setIssues] = useState<JiraIssue[]>(INITIAL_ISSUES);
-
   const counts = {
     inProgress:  issues.filter(i => i.status === "In Progress").length,
     cancelled:   issues.filter(i => i.status === "Cancelled").length,
@@ -224,11 +194,9 @@ export default function PipelinePage() {
   };
   const total = issues.length;
   const passRate = total > 0 ? Math.round((counts.done / total) * 100) : 0;
-
   function transition(id: string, newStatus: string) {
     setIssues(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i));
   }
-
   const donutData = [
     { name: "In Progress",  value: counts.inProgress,  color: "#3c67ea" },
     { name: "Cancelled",    value: counts.cancelled,   color: "#909cc0" },
@@ -237,151 +205,120 @@ export default function PipelinePage() {
     { name: "Approved",     value: counts.approved,    color: "#ffbb16" },
     { name: "Done",         value: counts.done,        color: "#14a687" },
   ].filter(d => d.value > 0);
-
   const summaryCards = [
-    { label: "Under Review", value: counts.underReview, sub: "Awaiting decision",           Icon: Clock,         color: "text-primary",   bg: "bg-primary/10",   border: "border-primary/30"   },
-    { label: "Rejected",     value: counts.rejected,    sub: "Blocked issues",               Icon: Ban,           color: "text-destructive",    bg: "bg-destructive/10",    border: "border-destructive/30"    },
-    { label: "Approved",     value: counts.approved,    sub: "Ready to send",                Icon: CheckCircle,   color: "text-warning",  bg: "bg-warning/10",  border: "border-warning/30"  },
-    { label: "Pass Rate",    value: `${passRate}%`,     sub: `${counts.done} of ${total} done`, Icon: CheckCircle2, color: "text-success", bg: "bg-success/10",  border: "border-success/30"  },
+    { label: "Under Review", value: counts.underReview, sub: "Awaiting decision",           Icon: Clock,         color: "text-[#3c67ea]",   bg: "bg-[#f0f1f7]",   border: "border-[#e6ebf8]"   },
+    { label: "Rejected",     value: counts.rejected,    sub: "Blocked issues",               Icon: Ban,           color: "text-[#db3743]",    bg: "bg-white",    border: "border-[#db3743]"    },
+    { label: "Approved",     value: counts.approved,    sub: "Ready to send",                Icon: CheckCircle,   color: "text-[#ffbb16]",  bg: "bg-white",  border: "border-[#ffbb16]"  },
+    { label: "Pass Rate",    value: `${passRate}%`,     sub: `${counts.done} of ${total} done`, Icon: CheckCircle2, color: "text-[#14a687]", bg: "bg-white",  border: "border-[#14a687]"  },
   ];
-
   return (
-    <div className="space-y-4 pb-10 px-4 sm:px-6 py-5">
-
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <GitBranch className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Pipeline</h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-              <p className="text-[11px] text-muted-foreground font-medium">
-                Live · Project: JIRA · {total} issues
-              </p>
-            </div>
-          </div>
+    <div className="app-bg min-h-screen">
+      {/* ADS PageHeader: 56px, white, border-b #E6EBF8 */}
+      <header
+        style={{ display: "grid", gridTemplateAreas: "'back header actions'", gridTemplateColumns: "min-content 1fr auto", alignItems: "center" }}
+        className="w-full h-[56px] bg-white border-b border-[#e6ebf8] px-4"
+      >
+        <div style={{ gridArea: "header" }} className="flex items-center gap-2 min-w-0">
+          <GitBranch className="w-4 h-4 text-[#3c67ea] shrink-0" />
+          {/* ADS grapefruit: 22px/600 */}
+          <h1 className="text-[1.375rem] font-semibold leading-[1.5] text-[#242d48]">Pipeline</h1>
+          <span className="text-[0.8125rem] font-normal text-[#485478] leading-[1.2]">
+            · {total} issues
+          </span>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-warning text-white text-[10px] font-black uppercase tracking-widest hover:bg-warning transition-all">
-          <RefreshCw className="w-3 h-3" />
-          Sync All
-        </button>
-      </div>
-
-      {/* ── KPI Cards + Donut ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* 4 compact KPI cards */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-3">
-          {summaryCards.map((card, idx) => (
-            <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.06 }}
-              className="glass-card rounded-xl p-3 flex items-center gap-3"
-            >
-              <div className={cn("p-2 rounded-lg shrink-0", card.bg)}>
-                <card.Icon className={cn("w-4 h-4", card.color)} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">
-                  {card.label}
-                </p>
-                <p className={cn("text-xl font-bold tracking-tight leading-tight", card.color)}>
-                  {card.value}
-                </p>
-                <p className="text-[10px] text-muted-foreground truncate">{card.sub}</p>
-              </div>
-            </motion.div>
-          ))}
+        <div style={{ gridArea: "actions" }}>
+          {/* ADS Secondary button */}
+          <button className="inline-flex items-center gap-2 py-2 px-4 rounded-[2px] text-[0.875rem] font-semibold leading-[1.2] shadow-[inset_0_0_0_1px_#3c67ea] text-[#3c67ea] hover:bg-[#f0f1f7] hover:shadow-[inset_0_0_0_2px_#1947ba] hover:text-[#1947ba] transition-all duration-200">
+            <RefreshCw className="w-4 h-4" />
+            Sync All
+          </button>
         </div>
-
-        {/* Status donut — taller chart, compact legend */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="glass-card rounded-xl p-3 flex flex-col gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">Status Distribution</span>
-          </div>
-          <div className="h-[160px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={donutData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius="42%"
-                  outerRadius="70%"
-                  dataKey="value"
-                  paddingAngle={3}
-                >
-                  {donutData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 8,
-                    border: "none",
-                    boxShadow: "0 10px 30px -5px rgba(0,0,0,0.12)",
-                    fontSize: 11,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-1">
-            {donutData.map(d => (
-              <div key={d.name} className="flex items-center justify-between text-[10px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                  <span className="text-muted-foreground uppercase tracking-widest">{d.name}</span>
+      </header>
+      <div className="px-4 sm:px-6 py-4 space-y-4">
+        {/* KPI Cards + Donut — ADS Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="lg:col-span-2 grid grid-cols-2 gap-3">
+            {summaryCards.map((card) => (
+              // ADS Card: 4px radius, white, #E6EBF8 border, L1 shadow
+              <div key={card.label} className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-4 flex items-center gap-3">
+                <div className={cn("p-2 rounded-[4px] shrink-0", card.bg)}>
+                  <card.Icon className={cn("w-4 h-4", card.color)} />
                 </div>
-                <span className="font-bold text-foreground">{d.value}</span>
+                <div className="min-w-0">
+                  {/* ADS: blueberry 12px/500 UPPERCASE, #485478 */}
+                  <p className="text-[0.75rem] font-medium text-[#485478] leading-[1.2] truncate">
+                    {card.label}
+                  </p>
+                  {/* ADS: watermelon 44px/600 */}
+                  <p className={cn("text-[1.375rem] font-semibold leading-[1.2]", card.color)}>
+                    {card.value}
+                  </p>
+                  {/* ADS: cranberry 13px/400, #485478 */}
+                  <p className="text-[0.8125rem] font-normal text-[#485478] leading-[1.2] truncate">{card.sub}</p>
+                </div>
               </div>
             ))}
           </div>
-        </motion.div>
+          {/* Status donut — ADS Card with ADS chart palette */}
+          <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#3c67ea]" />
+              {/* ADS: apple 16px/600 */}
+              <span className="text-[1rem] font-semibold text-[#242d48] leading-[1.2]">Status Distribution</span>
+            </div>
+            <div className="h-[160px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={donutData} cx="50%" cy="50%" innerRadius="42%" outerRadius="70%" dataKey="value" paddingAngle={3}>
+                    {donutData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 4,              // ADS 4px
+                      border: "1px solid #e6ebf8",  // ADS border
+                      boxShadow: "0 2px 4px rgba(36,45,72,0.15)", // ADS L1
+                      fontSize: 13,                 // ADS 13px
+                      color: "#242d48",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1">
+              {donutData.map(d => (
+                <div key={d.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
+                    {/* ADS: cranberry 13px/400, #485478 */}
+                    <span className="text-[0.8125rem] font-normal text-[#485478] uppercase leading-[1.2]">{d.name}</span>
+                  </div>
+                  <span className="text-[0.875rem] font-semibold text-[#242d48] leading-[1.2]">{d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Kanban Board */}
+        <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: "60vh" }}>
+          {COLUMN_ORDER.map(col => (
+            <BoardColumn
+              key={col}
+              name={col}
+              issues={issues.filter(i => i.status === col)}
+              onTransition={transition}
+            />
+          ))}
+        </div>
+        {/* Footer info — ADS: cranberry 13px, #485478 */}
+        <div className="flex items-center justify-center gap-2 py-2">
+          <span className="w-2 h-2 rounded-full bg-[#14a687]" />
+          <p className="text-[0.8125rem] font-normal text-[#485478] leading-[1.2]">
+            Live data from Jira Cloud · Synced with project pipeline
+          </p>
+        </div>
       </div>
-
-      {/* ── Kanban Board ──
-          Pattern from EmailSense AI: flex + overflow-x-auto directly on the board.
-          Columns use min-w + flex-1 — no min-w-max wrapper needed.
-          SidebarLayout height: 100svh + overflow: hidden ensures this never
-          causes page-level scroll. Only THIS div scrolls horizontally.
-      */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex gap-4 overflow-x-auto pb-4"
-        style={{ minHeight: "60vh" }}
-      >
-        {COLUMN_ORDER.map(col => (
-          <BoardColumn
-            key={col}
-            name={col}
-            issues={issues.filter(i => i.status === col)}
-            onTransition={transition}
-          />
-        ))}
-      </motion.div>
-
-      {/* Live badge */}
-      <div className="flex items-center justify-center gap-2 py-2">
-        <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-          Live data from Jira Cloud · Synced with project pipeline
-        </p>
-      </div>
-
     </div>
   );
 }

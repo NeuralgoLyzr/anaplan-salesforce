@@ -2,7 +2,7 @@ import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { ButtonProps, buttonVariants } from "@/components/ui/button"
+import { type ButtonProps } from "@/components/ui/button"
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
@@ -14,13 +14,17 @@ const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
 )
 Pagination.displayName = "Pagination"
 
+// ADS Pagination: items 26px min-width, 0 2px margin, transparent border, no radius.
+// Active: bg #F0F1F7, border 1px solid #596895, font-semibold.
+// Hover: bg #F0F1F7, border #F0F1F7, text #1947BA.
+
 const PaginationContent = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
 >(({ className, ...props }, ref) => (
   <ul
     ref={ref}
-    className={cn("flex flex-row items-center gap-1", className)}
+    className={cn("flex flex-row items-center", className)}
     {...props}
   />
 ))
@@ -30,7 +34,7 @@ const PaginationItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
+  <li ref={ref} className={cn("mx-0.5", className)} {...props} />  // ADS: 2px margin each side
 ))
 PaginationItem.displayName = "PaginationItem"
 
@@ -42,16 +46,26 @@ type PaginationLinkProps = {
 const PaginationLink = ({
   className,
   isActive,
-  size = "icon",
   ...props
 }: PaginationLinkProps) => (
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-        size,
-      }),
+      // ADS base link: 26px height, min-width 26px, flex center, border transparent
+      "flex items-center justify-center",
+      "min-w-[26px] h-[26px]",
+      "border border-transparent",
+      "rounded-[2px]",
+      "text-[0.875rem] leading-[1.2] text-[#242d48]",
+      "no-underline transition-all duration-200",
+      // Hover
+      "hover:bg-[#f0f1f7] hover:border-[#f0f1f7] hover:text-[#1947ba]",
+      // Active/current page
+      isActive
+        ? "bg-[#f0f1f7] border-[#596895] font-semibold"
+        : "font-normal",
+      // Disabled
+      "aria-disabled:cursor-not-allowed aria-disabled:pointer-events-auto",
       className
     )}
     {...props}
@@ -65,8 +79,7 @@ const PaginationPrevious = ({
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to previous page"
-    size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn("gap-1 px-2", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
@@ -81,8 +94,7 @@ const PaginationNext = ({
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to next page"
-    size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    className={cn("gap-1 px-2", className)}
     {...props}
   >
     <span>Next</span>
@@ -97,7 +109,7 @@ const PaginationEllipsis = ({
 }: React.ComponentProps<"span">) => (
   <span
     aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    className={cn("flex h-[26px] w-[26px] items-center justify-center text-[#485478]", className)}
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />

@@ -49,7 +49,7 @@ export function MarkdownPanel({
             href={ctaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary text-[12px] font-medium hover:bg-primary/15 transition-colors border border-primary/15"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-[4px] bg-[#f0f1f7] text-[#3c67ea] text-[0.75rem] font-medium hover:bg-[#f0f1f7] transition-colors border border-[#e6ebf8]"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             {ctaLabel}

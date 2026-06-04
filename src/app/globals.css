@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+/* Anaplan Design System — Adobe Typekit proxima-nova (exact ADS font) */
+@import url('https://use.typekit.net/mpv7lfl.css');
+/* Fallback: Mulish is the closest free match when Typekit is unavailable */
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @import 'tailwindcss';
 @plugin 'tailwindcss-animate';
@@ -54,11 +57,10 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-  /* Anaplan Design System — proxima-nova with the ADS fallback stack.
-     Mulish (free, closest match) renders until a Typekit proxima-nova kit is added. */
-  --font-sans: proxima-nova, var(--font-mulish), 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-serif: proxima-nova, var(--font-mulish), 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  /* Anaplan Design System — proxima-nova (Adobe Typekit) with Mulish free fallback */
+  --font-sans: proxima-nova, 'Mulish', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-serif: proxima-nova, 'Mulish', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   --color-primary-gradient-start: hsl(var(--primary-gradient-start));
   --color-primary-gradient-end: hsl(var(--primary-gradient-end));
@@ -76,8 +78,13 @@
      interactive blue #3c67ea (pressed #1947ba), teal #14a687,
      amber #ffbb16, red #db3743, borders #dfe2eb. Small 2–4px radii. */
 
-  --background: 0 0% 100%;            /* white surfaces */
-  --foreground: 225 33% 21%;          /* #242d48 navy */
+  /* ─── Anaplan Design System (ADS) — 1:1 token mapping ────────────────────
+     Source: ADS Storybook compiled assets, runtime mode.
+     Primary: #3C67EA  Text: #242D48  Border: #E6EBF8  Input border: #7885AB
+     Success: #14A687  Warning: #FFBB16  Danger: #DB3743                    */
+
+  --background: 0 0% 100%;               /* #FFFFFF — white surface */
+  --foreground: 225 33% 21%;             /* #242D48 — neutral-martinique (text main) */
 
   --card: 0 0% 100%;
   --card-foreground: 225 33% 21%;
@@ -85,54 +92,56 @@
   --popover: 0 0% 100%;
   --popover-foreground: 225 33% 21%;
 
-  --primary: 225 80% 58%;             /* #3c67ea ADS interactive blue */
+  --primary: 225 80% 58%;               /* #3C67EA — blue-mariner (signature) */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 225 25% 38%;           /* #485478 slate */
+  --secondary: 225 25% 38%;             /* #485478 — neutral-comet (text secondary) */
   --secondary-foreground: 0 0% 100%;
 
-  --muted: 231 30% 95%;               /* #f0f1f7 */
-  --muted-foreground: 225 25% 38%;    /* #485478 */
+  --muted: 231 30% 95%;                 /* #F0F1F7 — neutral-mischka (bg hover) */
+  --muted-foreground: 225 25% 38%;      /* #485478 — neutral-comet */
 
-  --accent: 223 56% 94%;              /* #e6ebf8 light blue tint */
+  --accent: 223 56% 94%;                /* #E6EBF8 — neutral-linkwater (border) */
   --accent-foreground: 225 33% 21%;
 
-  --destructive: 356 68% 54%;         /* #db3743 */
+  --destructive: 356 68% 54%;           /* #DB3743 — red-valencia (danger) */
   --destructive-foreground: 0 0% 100%;
 
-  --success: 167 78% 36%;             /* #14a687 teal */
+  --success: 167 78% 36%;               /* #14A687 — green-robinsegg (success) */
   --success-foreground: 0 0% 100%;
 
-  --warning: 42 100% 54%;             /* #ffbb16 amber */
-  --warning-foreground: 225 33% 21%;  /* navy text on amber */
+  --warning: 42 100% 54%;               /* #FFBB16 — yellow-brightsun (warning) */
+  --warning-foreground: 225 33% 21%;    /* navy text on amber */
 
-  --border: 225 23% 90%;              /* #dfe2eb */
-  --input: 225 23% 90%;
-  --ring: 225 80% 58%;                /* #3c67ea blue focus */
+  /* ADS border = neutral-linkwater #E6EBF8 (NOT neutral-ghost #DFE2EB) */
+  --border: 223 56% 94%;                /* #E6EBF8 — neutral-linkwater */
+  /* ADS input background = neutral-athens #F8F8FA */
+  --input: 240 17% 98%;                 /* #F8F8FA — neutral-athens */
+  --ring: 225 36% 40%;                  /* #596895 — neutral-kimberly (focus outline) */
 
-  --radius: 0.25rem;                  /* ADS 4px */
+  --radius: 0.25rem;                    /* ADS 4px (medium) */
 
-  /* Chart colors — ADS palette */
-  --chart-1: 225 80% 58%;             /* blue #3c67ea */
-  --chart-2: 173 100% 40%;            /* teal #00ccb5 */
-  --chart-3: 225 33% 21%;             /* navy #242d48 */
-  --chart-4: 42 100% 54%;             /* amber #ffbb16 */
-  --chart-5: 225 25% 60%;             /* slate */
+  /* Chart colors — ADS full palette */
+  --chart-1: 225 80% 58%;               /* #3C67EA — blue */
+  --chart-2: 173 100% 40%;              /* #00CCB5 — green-jungle */
+  --chart-3: 225 33% 21%;               /* #242D48 — navy */
+  --chart-4: 42 100% 54%;               /* #FFBB16 — amber */
+  --chart-5: 167 78% 36%;               /* #14A687 — teal */
 
-  /* Sidebar — light panel, ADS navy text + blue accents */
+  /* ─── Sidebar — light panel, ADS navy text + blue accents ─────────────── */
   --sidebar: 231 30% 98%;
   --sidebar-foreground: 225 33% 21%;
   --sidebar-primary: 225 80% 58%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 223 56% 94%;      /* #e6ebf8 */
+  --sidebar-accent: 223 56% 94%;        /* #e6ebf8 */
   --sidebar-accent-foreground: 225 33% 21%;
   --sidebar-border: 225 23% 90%;
-  --sidebar-ring: 225 80% 58%;        /* blue focus ring */
+  --sidebar-ring: 225 80% 58%;          /* blue focus ring */
 
-  /* Gradient + highlight tokens used by CTA buttons */
-  --primary-gradient-start: 225 80% 58%;  /* #3c67ea */
-  --primary-gradient-end: 223 76% 41%;     /* #1947ba */
-  --accent-highlight: 42 100% 54%;
+  /* Gradient tokens for CTA buttons */
+  --primary-gradient-start: 225 80% 58%;   /* #3C67EA */
+  --primary-gradient-end: 223 76% 41%;      /* #1947BA */
+  --accent-highlight: 42 100% 54%;          /* #FFBB16 */
 }
 
 html {
@@ -142,9 +151,9 @@ html {
 body {
   height: 100%;
   margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  letter-spacing: -0.01em;
+  font-size: 14px;         /* ADS base: 0.875rem */
+  line-height: 1.2;        /* ADS standard line-height */
+  letter-spacing: 0;       /* ADS: no negative tracking on body */
 }
 
 /* ADS page canvas — a flat, very light cool-grey surface (#f7f8fc). */
@@ -249,8 +258,8 @@ body {
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans), 'Inter', system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    font-family: var(--font-sans), 'Mulish', system-ui, sans-serif;
+    letter-spacing: 0;   /* ADS headings: no negative letter-spacing */
   }
 
   ::-webkit-scrollbar {
@@ -330,7 +339,8 @@ body {
   }
 }
 
-/* Sidebar design system overrides */
+/* ─── Sidebar — original light theme ──────────────────────────────────── */
+
 [data-sidebar="group-label"] {
   color: hsl(var(--primary) / 0.7);
   font-size: 11px;
@@ -341,6 +351,40 @@ body {
 
 [data-sidebar="menu-button"] {
   border-radius: 10px !important;
+}
+
+
+/* ADS: sidebar shadow override — shadcn sidebar uses shadow-lg internally */
+[data-sidebar="sidebar"] {
+  box-shadow: none !important;
+}
+
+/* ADS: skeleton loader — neutral-athens bg, no tinted color */
+.animate-pulse {
+  background-color: #f0f1f7;
+}
+
+/* ─── ADS Loader keyframes (exact from Storybook source) ──────────────────
+   Matches: /docs/display-loader--docs
+   loader-rotate-all:    outer wrapper — 2s linear infinite (constant spin)
+   loader-rotate-first:  disc 2 arc    — 1.5s ease-in-out (75% keyframe hold)
+   loader-rotate-second: disc 3 arc    — 1.5s ease-in-out (50% keyframe hold)  */
+
+@keyframes ads-loader-rotate-all {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes ads-loader-rotate-first {
+  0%   { transform: scale(1) rotate(0deg); }
+  75%  { transform: scale(1) rotate(360deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+@keyframes ads-loader-rotate-second {
+  0%   { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1) rotate(360deg); }
+  100% { transform: scale(1) rotate(360deg); }
 }
 
 /* ─── Company Themes ─────────────────────────────────────── */

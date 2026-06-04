@@ -12,6 +12,7 @@ const SelectGroup = SelectPrimitive.Group
 
 const SelectValue = SelectPrimitive.Value
 
+// ADS Select trigger: 2px radius, #F8F8FA bg, box-shadow border, 13px/400
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
@@ -19,7 +20,18 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs ring-offset-background data-placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex w-full items-center justify-between whitespace-nowrap",
+      "rounded-[2px]",
+      "border-2 border-dotted border-transparent",
+      "bg-[#f8f8fa]",
+      "px-2 py-2",
+      "text-[0.8125rem] font-normal text-[#242d48] leading-[1.2]",
+      "shadow-[0_0_0_1px_#7885ab]",
+      "hover:shadow-[0_0_0_2px_#7885ab]",
+      "focus:outline-none focus:border-[#485478] focus:shadow-none",
+      "data-placeholder:text-[#485478]",
+      "disabled:cursor-not-allowed disabled:opacity-50",
+      "[&>span]:line-clamp-1",
       className
     )}
     {...props}
@@ -67,6 +79,7 @@ const SelectScrollDownButton = React.forwardRef<
 SelectScrollDownButton.displayName =
   SelectPrimitive.ScrollDownButton.displayName
 
+// ADS Select menu: 4px radius, white bg, #E6EBF8 border, L1 shadow, 8px padding, 240px max-height
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
@@ -75,7 +88,19 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-(--radix-select-content-available-height) min-w-32 overflow-y-auto overflow-x-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-(--radix-select-content-transform-origin)",
+        "relative z-50 overflow-y-auto overflow-x-hidden",
+        "rounded-[4px]",
+        "border border-[#e6ebf8]",
+        "bg-white text-[#242d48]",
+        "shadow-[0_2px_4px_rgba(36,45,72,0.15)]",
+        "max-h-[240px] min-w-[160px]",
+        "p-2",                              // ADS menu padding: 8px
+        "mt-2",                             // ADS: margin-top 8px
+        "data-[state=open]:animate-in data-[state=closed]:animate-out",
+        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
+        "origin-(--radix-select-content-transform-origin)",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className
@@ -105,12 +130,13 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn("px-2 py-1.5 text-sm font-semibold", className)}
+    className={cn("px-2 py-1.5 text-[0.875rem] leading-[1.2] font-semibold", className)}
     {...props}
   />
 ))
 SelectLabel.displayName = SelectPrimitive.Label.displayName
 
+// ADS option: 2px radius, 8px×16px padding, 13px/400, hover #F0F1F7, selected #DFE2EB/600
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
@@ -118,7 +144,14 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+      "relative flex w-full cursor-default select-none items-center",
+      "rounded-[2px]",
+      "py-2 pl-4 pr-8",                       // ADS: 8px 16px
+      "text-[0.8125rem] font-normal text-[#242d48] leading-[1.2]",
+      "outline-none",
+      "focus:bg-[#f0f1f7] focus:text-[#242d48]",   // ADS hover
+      "data-[state=checked]:bg-[#dfe2eb] data-[state=checked]:font-semibold",  // ADS selected
+      "data-disabled:pointer-events-none data-disabled:opacity-30",
       className
     )}
     {...props}
@@ -139,7 +172,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    className={cn("-mx-1 my-1 h-px bg-[#f0f1f7]", className)}
     {...props}
   />
 ))

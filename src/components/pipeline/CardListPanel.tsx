@@ -9,18 +9,18 @@ import type { TaskCard } from "@/lib/pipeline-types";
 export type { TaskCard };
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
-  "Todo":        "bg-slate-400/10 text-slate-500 border-slate-300/30",
-  "In Progress": "bg-primary/10 text-primary border-primary/20",
-  "Done":        "bg-success/10 text-success border-success/20",
-  "Blocked":     "bg-destructive/10 text-destructive border-destructive/20",
-  "Review":      "bg-warning/10 text-warning border-warning/20",
+  "Todo":        "bg-[#f0f1f7] text-[#485478] border-[#e6ebf8]/30",
+  "In Progress": "bg-[#f0f1f7] text-[#3c67ea] border-[#e6ebf8]",
+  "Done":        "bg-white text-[#14a687] border-[#14a687]",
+  "Blocked":     "bg-white text-[#db3743] border-[#db3743]",
+  "Review":      "bg-white text-[#ffbb16] border-[#ffbb16]",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  critical: "bg-destructive/10 text-destructive",
-  high:     "bg-warning/10 text-warning",
-  medium:   "bg-warning/10 text-warning",
-  low:      "bg-slate-400/10 text-slate-500",
+  critical: "bg-white text-[#db3743]",
+  high:     "bg-white text-[#ffbb16]",
+  medium:   "bg-white text-[#ffbb16]",
+  low:      "bg-[#f0f1f7] text-[#485478]",
 };
 
 interface Props {
@@ -63,7 +63,7 @@ export function CardListPanel({
           const statusCls =
             statusColors[card.status] ??
             DEFAULT_STATUS_COLORS[card.status] ??
-            "bg-muted/60 text-muted-foreground border-border/30";
+            "bg-[#f0f1f7] text-[#485478] border-[#e6ebf8]/30";
           const priorityCls = card.priority
             ? (PRIORITY_COLORS[card.priority.toLowerCase()] ?? "")
             : "";
@@ -71,24 +71,24 @@ export function CardListPanel({
           return (
             <li
               key={`${card.id}-${i}`}
-              className="rounded-xl border border-primary/[0.08] bg-background/30 px-4 py-3 hover:bg-background/60 transition-colors"
+              className="rounded-[4px] border border-[#e6ebf8] bg-white px-4 py-3 hover:bg-white transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5 min-w-0 flex-1">
                   {typeof card.id === "number" && (
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[4px] bg-[#f0f1f7] text-[0.75rem] font-semibold text-[#3c67ea]">
                       {card.id}
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground leading-snug">
+                    <p className="text-[0.875rem] leading-[1.2] font-medium text-[#242d48] leading-[1.2]">
                       {card.title}
                     </p>
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[0.75rem] text-[#485478]">
                       {card.owner && (
                         <span>
                           Owner:{" "}
-                          <span className="text-foreground/70">{card.owner}</span>
+                          <span className="text-[#242d48]">{card.owner}</span>
                         </span>
                       )}
                       {(card.start || card.end) && (
@@ -99,7 +99,7 @@ export function CardListPanel({
                       {card.dependency && (
                         <span>
                           Depends:{" "}
-                          <span className="font-medium text-foreground/60">
+                          <span className="font-medium text-[#242d48]">
                             #{card.dependency}
                           </span>
                         </span>
@@ -110,7 +110,7 @@ export function CardListPanel({
                         {card.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/5 text-primary/60 border border-primary/10"
+                            className="text-[0.75rem] px-1.5 py-0.5 rounded-[2px] bg-[#f0f1f7] text-[#3c67ea] border border-[#e6ebf8]"
                           >
                             {tag}
                           </span>
@@ -122,7 +122,7 @@ export function CardListPanel({
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
                   <span
                     className={cn(
-                      "text-[10px] font-medium px-2 py-0.5 rounded-full border capitalize",
+                      "text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border capitalize",
                       statusCls
                     )}
                   >
@@ -131,7 +131,7 @@ export function CardListPanel({
                   {card.priority && (
                     <span
                       className={cn(
-                        "text-[10px] px-1.5 py-0.5 rounded-full capitalize",
+                        "text-[0.75rem] px-1.5 py-0.5 rounded-[2px] capitalize",
                         priorityCls
                       )}
                     >

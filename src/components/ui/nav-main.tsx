@@ -57,7 +57,7 @@ function NavItemWithSub({ item, pathname }: { item: NavItem; pathname: string })
                 <SidebarMenuSubButton asChild isActive={isSubActive} className="h-auto py-1.5 whitespace-normal [&>span:last-child]:overflow-visible [&>span:last-child]:whitespace-normal [&>span:last-child]:truncate-none">
                   <Link href={sub.url}>
                     {sub.icon && <sub.icon className="w-3.5 h-3.5 flex-shrink-0" />}
-                    <span className="leading-snug">{sub.title}</span>
+                    <span className="leading-[1.2]">{sub.title}</span>
                   </Link>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>

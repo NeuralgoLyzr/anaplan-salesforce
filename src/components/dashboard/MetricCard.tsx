@@ -26,22 +26,22 @@ export const itemVariants = {
 
 export function MetricCard({ metric }: { metric: DashboardMetric }) {
   return (
-    <motion.div variants={itemVariants} className="glass-card rounded-xl px-3.5 py-2.5 cursor-pointer group">
-      <h3 className="text-[9px] font-semibold text-muted-foreground mb-0.5 uppercase tracking-wider">
+    <motion.div variants={itemVariants} className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] px-3.5 py-2.5 cursor-pointer group">
+      <h3 className="text-[0.75rem] font-medium text-[#485478] mb-0.5 uppercase">
         {metric.label}
       </h3>
-      <span className="text-lg font-bold font-mono tracking-tight text-foreground tabular-nums">
+      <span className="text-[1rem] leading-[1.2] font-semibold font-mono text-[#242d48] tabular-nums">
         <AnimatedValue value={metric.value} />
       </span>
-      <div className="mt-1 flex items-center gap-1.5 text-[9px]">
+      <div className="mt-1 flex items-center gap-1.5 text-[0.75rem]">
         <span
           className={cn(
-            "flex items-center font-medium px-1 py-0.5 rounded",
+            "inline-flex items-center font-medium px-1 py-0 rounded-[2px] border uppercase",
             metric.changeType === "positive"
-              ? "text-success bg-success/10"
+              ? "text-[#14a687] bg-white border-[#14a687]"
               : metric.changeType === "negative"
-              ? "text-destructive bg-destructive/10"
-              : "text-muted-foreground bg-black/[0.04]"
+              ? "text-[#db3743] bg-white border-[#f2919d]"
+              : "text-[#485478] bg-[#f0f1f7] border-[#e6ebf8]"
           )}
         >
           {metric.trend === "up" && <TrendingUp className="w-2.5 h-2.5 mr-0.5" />}
@@ -49,7 +49,7 @@ export function MetricCard({ metric }: { metric: DashboardMetric }) {
           {metric.change}
         </span>
         {metric.detail && (
-          <span className="text-muted-foreground/50 text-[8px] truncate">{metric.detail}</span>
+          <span className="text-[#485478] text-[0.75rem] truncate">{metric.detail}</span>
         )}
       </div>
     </motion.div>

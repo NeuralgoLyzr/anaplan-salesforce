@@ -1,16 +1,13 @@
 "use client";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ChevronDown, ChevronRight, Loader2, RefreshCw, FileText, Clock, CheckCircle2,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, RefreshCw, FileText, Clock, CheckCircle2,  } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntegratedSystemsCard } from "@/components/integrations/IntegratedSystemsCard";
 import { isBusy, formatDate } from "@/lib/rev-rec/ui";
 import type { Session } from "@/lib/rev-rec/types";
 import { cn } from "@/lib/utils";
-
+import { Loader } from "@/components/ui/loader";
 export interface AgentBulkShellProps {
   title: string;
   subtitle: string;
@@ -39,16 +36,13 @@ export interface AgentBulkShellProps {
   // Hint shown when no sessions have content for this agent.
   emptyHint?: string;
 }
-
 type FilterTab = "pending" | "completed";
-
 export function AgentBulkShell(props: AgentBulkShellProps) {
   const { title, subtitle, icon: HeaderIcon, hasContent, isPending, toolbar, renderSession, rowPill, rowSummary, emptyHint } = props;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterTab, setFilterTab] = useState<FilterTab>("pending");
-
   const inflight = useRef(false);
   const load = useCallback(async () => {
     if (inflight.current) return;
@@ -74,11 +68,9 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
       inflight.current = false;
     }
   }, []);
-
   useEffect(() => {
     load();
   }, [load]);
-
   // Light auto-refresh while any customer is still running.
   useEffect(() => {
     const anyBusy = sessions.some((s) => isBusy(s.status));
@@ -86,7 +78,6 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
     const t = setInterval(load, 4000);
     return () => clearInterval(t);
   }, [sessions, load]);
-
   const allVisible = useMemo(() => sessions.filter(hasContent), [sessions, hasContent]);
   // Filter-tab partition — only meaningful when isPending is supplied.
   const pendingCount = useMemo(
@@ -98,22 +89,21 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
     if (!isPending) return allVisible;
     return allVisible.filter((s) => (filterTab === "pending" ? isPending(s) : !isPending(s)));
   }, [allVisible, isPending, filterTab]);
-
   return (
     <div className="space-y-5 px-4 sm:px-6 py-5 pb-12">
       {/* Header row */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <HeaderIcon className="w-4 h-4 text-primary" />
+          <div className="w-9 h-9 rounded-[4px] bg-[#e6ebf8] flex items-center justify-center">
+            <HeaderIcon className="w-4 h-4 text-[#3c67ea]" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Agents</p>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">{title}</h1>
-            <p className="text-[11px] text-muted-foreground font-medium">
+            <p className="text-[0.75rem] uppercase text-[#485478] font-medium">Agents</p>
+            <h1 className="text-[1.125rem] font-semibold leading-[1.2] text-[#242d48]">{title}</h1>
+            <p className="text-[0.75rem] text-[#485478] font-medium">
               {subtitle} · {visible.length} customer{visible.length === 1 ? "" : "s"}
               {isPending && (
-                <span className="text-muted-foreground/70">
+                <span className="text-[#485478]">
                   {" "}in {filterTab === "pending" ? "pending" : "completed"}
                 </span>
               )}
@@ -123,7 +113,7 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
         <div className="flex items-start gap-2">
           <button
             onClick={load}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="p-2 rounded-[4px] text-[#485478] hover:text-[#242d48] hover:bg-[#f0f1f7] transition-colors"
             title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
@@ -131,7 +121,6 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
           {toolbar?.(visible, load)}
         </div>
       </div>
-
       {/* Integrated systems */}
       <IntegratedSystemsCard
         items={[
@@ -139,17 +128,16 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
           { id: "anaplan-mcp", name: "Anaplan MCP", logoSrc: "/PLAN-82aa46a2.png", connected: true },
         ]}
       />
-
       {/* Pending / Completed filter tabs */}
       {isPending && (
-        <div className="flex items-center gap-1 bg-muted/40 rounded-xl p-1 w-fit">
+        <div className="flex items-center gap-1 bg-[#f0f1f7] rounded-[4px] p-1 w-fit">
           <FilterTabButton
             active={filterTab === "pending"}
             label="Pending action"
             count={pendingCount}
             icon={Clock}
             onClick={() => setFilterTab("pending")}
-            activeCls="bg-warning/15 text-warning border border-warning/30"
+            activeCls="bg-white text-[#242d48] font-semibold shadow-[0_1px_3px_rgba(36,45,72,0.15)]"
           />
           <FilterTabButton
             active={filterTab === "completed"}
@@ -157,32 +145,30 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
             count={completedCount}
             icon={CheckCircle2}
             onClick={() => setFilterTab("completed")}
-            activeCls="bg-success/15 text-success border border-success/30"
+            activeCls="bg-white text-[#242d48] font-semibold shadow-[0_1px_3px_rgba(36,45,72,0.15)]"
           />
         </div>
       )}
-
       {error && (
-        <div className="glass-card rounded-xl p-4 border border-destructive/20 text-sm text-destructive">
+        <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-4 border border-[#f2919d] text-[0.875rem] leading-[1.2] text-[#db3743]">
           {error}
         </div>
       )}
-
       {/* Customer collapsible list */}
       {loading ? (
-        <div className="glass-card rounded-xl p-10 text-center">
-          <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" />
+        <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-8 text-center">
+          <Loader size="small" className="mx-auto" />
         </div>
       ) : visible.length === 0 ? (
-        <div className="glass-card rounded-xl p-10 text-center">
-          <p className="text-sm font-medium text-foreground/70">
+        <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] p-8 text-center">
+          <p className="text-[0.875rem] leading-[1.2] font-medium text-[#242d48]">
             {isPending
               ? filterTab === "pending"
                 ? "Nothing pending"
                 : "No completed items yet"
               : "Nothing to show yet"}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[#485478] mt-1">
             {isPending && filterTab === "pending"
               ? "All customers on this agent have been actioned."
               : isPending && filterTab === "completed"
@@ -208,7 +194,6 @@ export function AgentBulkShell(props: AgentBulkShellProps) {
     </div>
   );
 }
-
 function FilterTabButton({
   active, label, count, icon: Icon, onClick, activeCls,
 }: {
@@ -223,22 +208,21 @@ function FilterTabButton({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all",
-        active ? activeCls : "text-muted-foreground hover:text-foreground",
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[0.75rem] font-medium transition-all",
+        active ? activeCls : "text-[#485478] hover:text-[#242d48]",
       )}
     >
       <Icon className="w-3.5 h-3.5" />
       {label}
       <span className={cn(
-        "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-        active ? "bg-background/60" : "bg-muted/60",
+        "text-[0.75rem] font-medium px-1 py-0 rounded-[2px] border",
+        active ? "bg-white" : "bg-[#f0f1f7]",
       )}>
         {count}
       </span>
     </button>
   );
 }
-
 function CustomerCollapsible({
   session, defaultOpen, rowPill, rowSummary, children,
 }: {
@@ -252,9 +236,8 @@ function CustomerCollapsible({
   const [open, setOpen] = useState(defaultOpen);
   const toggle = () => setOpen((o) => !o);
   const pill = rowPill?.(session);
-
   return (
-    <div className="glass-card rounded-xl overflow-hidden">
+    <div className="rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] overflow-hidden">
       <div
         role="button"
         tabIndex={0}
@@ -263,20 +246,20 @@ function CustomerCollapsible({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
         }}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-primary/[0.03] transition-colors text-left cursor-pointer select-none"
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#f0f1f7] transition-colors text-left cursor-pointer select-none"
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className="flex items-center gap-2 min-w-0">
-            <span className="font-semibold text-foreground truncate">{session.company_name}</span>
+            <span className="font-semibold text-[#242d48] truncate">{session.company_name}</span>
           </span>
           {pill}
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 text-[0.75rem] text-[#485478]">
             <FileText className="w-3 h-3" /> {session.uploaded_files.length}
           </span>
           {rowSummary?.(session)}
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-[0.75rem] text-[#485478] whitespace-nowrap">
             {formatDate(session.updated_at)}
           </span>
           <span
@@ -289,14 +272,14 @@ function CustomerCollapsible({
                 router.push(`/customers/${session.session_id}`);
               }
             }}
-            className="text-[11px] font-medium text-primary hover:underline"
+            className="text-[0.75rem] font-medium text-[#3c67ea] hover:underline"
           >
             Open
           </span>
           {open ? (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            <ChevronDown className="w-4 h-4 text-[#485478]" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <ChevronRight className="w-4 h-4 text-[#485478]" />
           )}
         </div>
       </div>
@@ -307,7 +290,7 @@ function CustomerCollapsible({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="overflow-hidden border-t border-primary/[0.06]"
+            className="overflow-hidden border-t border-[#e6ebf8]"
           >
             <div className="p-4">
               {children}

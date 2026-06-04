@@ -11,12 +11,12 @@ export function ActiveThemeDot() {
   return (
     <span
       title={`Theme: ${current.label} — click to change`}
-      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-border hover:bg-accent/10 transition-colors text-xs text-muted-foreground"
+      className="flex items-center gap-1.5 px-2 py-1.5 rounded-[4px] border border-[#e6ebf8] hover:bg-[#e6ebf8]/10 transition-colors text-[0.75rem] leading-[1.2] text-[#485478]"
     >
       <Paintbrush className="w-3.5 h-3.5" />
       <span className="hidden sm:block">{current.label}</span>
       <span
-        className="w-2.5 h-2.5 rounded-full border border-black/10"
+        className="w-2.5 h-2.5 rounded-full border border-[#e6ebf8]"
         style={{ background: current.primaryHex }}
       />
     </span>
@@ -34,17 +34,17 @@ export function ThemeSwitcher() {
         onClick={() => setOpen(o => !o)}
         title="Switch theme"
         className={cn(
-          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium",
-          "border border-border text-muted-foreground",
-          "hover:bg-accent hover:text-accent-foreground transition-all duration-150",
-          open && "bg-accent text-accent-foreground"
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-[4px] text-[0.75rem] leading-[1.2] font-medium",
+          "border border-[#e6ebf8] text-[#485478]",
+          "hover:bg-[#e6ebf8] hover:text-[#242d48] transition-all duration-150",
+          open && "bg-[#e6ebf8] text-[#242d48]"
         )}
       >
         <Paintbrush className="w-3.5 h-3.5" />
         <span className="hidden sm:block">{current.label}</span>
         {/* Live color dot */}
         <span
-          className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-black/10"
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-[#e6ebf8]"
           style={{ background: current.primaryHex }}
         />
       </button>
@@ -58,11 +58,11 @@ export function ThemeSwitcher() {
             onClick={() => setOpen(false)}
           />
 
-          <div className="absolute right-0 top-full mt-2 z-50 w-72 glass-card rounded-2xl shadow-xl overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 z-50 w-72 rounded-[4px] bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] shadow-[0_4px_8px_rgba(36,45,72,0.20)] overflow-hidden">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-border/50">
-              <p className="text-xs font-semibold text-foreground tracking-wide">Theme</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+            <div className="px-4 py-3 border-b border-[#e6ebf8]/50">
+              <p className="text-[0.75rem] leading-[1.2] font-semibold text-[#242d48] ">Theme</p>
+              <p className="text-[0.75rem] text-[#485478] mt-0.5">
                 Changes apply across all pages
               </p>
             </div>
@@ -76,15 +76,15 @@ export function ThemeSwitcher() {
                     key={theme.id}
                     onClick={() => { setTheme(theme.id); setOpen(false); }}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left",
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-[4px] transition-all duration-150 text-left",
                       isActive
-                        ? "bg-primary/10 border border-primary/25"
-                        : "hover:bg-black/[0.04] border border-transparent"
+                        ? "bg-[#e6ebf8] border border-[#e6ebf8]"
+                        : "hover:bg-[#f0f1f7] border border-transparent"
                     )}
                   >
                     {/* Company initials avatar */}
                     <span
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+                      className="w-8 h-8 rounded-[4px] flex items-center justify-center text-[0.75rem] font-semibold text-white flex-shrink-0"
                       style={{ background: theme.sidebarHex }}
                     >
                       {theme.initials}
@@ -93,8 +93,8 @@ export function ThemeSwitcher() {
                     {/* Name + swatch */}
                     <div className="flex-1 min-w-0">
                       <p className={cn(
-                        "text-sm font-medium leading-none",
-                        isActive ? "text-primary" : "text-foreground"
+                        "text-[0.875rem] leading-[1.2] font-medium leading-[1.2]",
+                        isActive ? "text-[#3c67ea]" : "text-[#242d48]"
                       )}>
                         {theme.label}
                       </p>
@@ -107,7 +107,7 @@ export function ThemeSwitcher() {
 
                     {/* Active checkmark */}
                     {isActive && (
-                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      <Check className="w-4 h-4 text-[#3c67ea] flex-shrink-0" />
                     )}
                   </button>
                 );
@@ -115,8 +115,8 @@ export function ThemeSwitcher() {
             </div>
 
             {/* Footer hint */}
-            <div className="px-4 py-2.5 border-t border-border/40 bg-muted/30">
-              <p className="text-[11px] text-muted-foreground">
+            <div className="px-4 py-2.5 border-t border-[#e6ebf8]/40 bg-[#f0f1f7]">
+              <p className="text-[0.75rem] text-[#485478]">
                 Theme is saved automatically
               </p>
             </div>
@@ -130,7 +130,7 @@ export function ThemeSwitcher() {
 function Swatch({ hex }: { hex: string }) {
   return (
     <span
-      className="w-3.5 h-3.5 rounded-full border border-black/10 flex-shrink-0"
+      className="w-3.5 h-3.5 rounded-[2px] border border-[#e6ebf8] flex-shrink-0"
       style={{ background: hex }}
     />
   );

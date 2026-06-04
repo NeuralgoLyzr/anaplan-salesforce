@@ -19,10 +19,10 @@ const SEVERITY_ICON = {
 } as const;
 
 const SEVERITY_COLOR = {
-  critical: "text-destructive",
-  warning: "text-warning",
-  positive: "text-success",
-  info: "text-primary",
+  critical: "text-[#db3743]",
+  warning: "text-[#ffbb16]",
+  positive: "text-[#14a687]",
+  info: "text-[#3c67ea]",
 } as const;
 
 export function InsightRow({
@@ -38,21 +38,21 @@ export function InsightRow({
     <motion.div
       variants={itemVariants}
       className={cn(
-        "flex items-start gap-3 py-3 px-3 transition-colors hover:bg-white/40 rounded-lg group",
-        index !== 0 && "border-t border-black/[0.04]"
+        "flex items-start gap-3 py-3 px-3 transition-colors hover:bg-[#f0f1f7] rounded-[4px] group",
+        index !== 0 && "border-t border-[#e6ebf8]"
       )}
     >
       <div className={cn("p-1 rounded mt-0.5 flex-shrink-0", SEVERITY_COLOR[insight.severity])}>
         <Icon className="w-3.5 h-3.5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-foreground leading-snug">
-          <span className="font-semibold">{insight.headline}</span>
-          <span className="text-muted-foreground"> — {insight.summary}</span>
+        <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[#242d48] leading-[1.2]">
+          <span className="font-medium">{insight.headline}</span>
+          <span className="text-[#485478]"> — {insight.summary}</span>
         </p>
         <Link
           href={insight.href ?? "/"}
-          className="inline-flex items-center text-[11px] font-medium text-primary hover:text-primary/80 transition-colors mt-1 opacity-0 group-hover:opacity-100"
+          className="inline-flex items-center text-[0.75rem] font-medium text-[#3c67ea] hover:text-[#3c67ea] transition-colors mt-1 "
         >
           {insight.actionLabel ?? "Investigate"}
           <ArrowRight className="w-3 h-3 ml-0.5" />

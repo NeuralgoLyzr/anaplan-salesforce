@@ -35,20 +35,20 @@ export function SearchBar({ query, onChange, onSubmit }: SearchBarProps) {
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSubmit()}
           placeholder="Ask about a contract, allocation, or journal entry…"
-          className="w-full glass-input rounded-[18px] pl-5 pr-28 py-4 text-sm focus:outline-none placeholder:text-muted-foreground/40"
+          className="w-full bg-[#f8f8fa] shadow-[0_0_0_1px_#7885ab] rounded-[2px] pl-5 pr-28 py-4 text-[0.8125rem] leading-[1.2] focus:outline-none placeholder:text-[#485478]"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-          <label className="p-2 rounded-xl text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer" title="Attach contract">
+          <label className="p-2 rounded-[2px] text-[#485478] hover:text-[#3c67ea] hover:bg-[#f0f1f7] transition-colors cursor-pointer" title="Attach contract">
             <Paperclip className="w-4 h-4" />
             <input type="file" className="hidden" />
           </label>
-          <button className="p-2 rounded-xl text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-colors">
+          <button className="p-2 rounded-[2px] text-[#485478] hover:text-[#3c67ea] hover:bg-[#f0f1f7] transition-colors">
             <Mic className="w-4 h-4" />
           </button>
           <button
             onClick={onSubmit}
             disabled={!query.trim()}
-            className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-gradient-end text-white hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm shadow-primary/10"
+            className="p-2.5 rounded-[4px] bg-[#3c67ea] text-white hover:bg-[#1947ba] active:bg-[#0b2265] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 "
           >
             <Send className="w-3.5 h-3.5" />
           </button>
@@ -61,7 +61,7 @@ export function SearchBar({ query, onChange, onSubmit }: SearchBarProps) {
           <Link
             key={label}
             href={`/console?q=${encodeURIComponent(q)}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-muted-foreground bg-primary/[0.06] hover:bg-primary/[0.12] hover:text-primary border border-primary/10 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-[0.75rem] font-medium text-[#485478] bg-white border border-[#e6ebf8] hover:bg-[#f0f1f7] hover:text-[#242d48] transition-colors"
           >
             <Icon className="w-3 h-3" />
             {label}

@@ -70,14 +70,14 @@ function FileRow({ node, depth = 0 }: { node: FileNode; depth?: number }) {
       <div>
         <button
           onClick={() => setOpen((o) => !o)}
-          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-black/[0.03] transition-colors text-left"
+          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[4px] hover:bg-[#f0f1f7] transition-colors text-left"
           style={{ paddingLeft: `${12 + depth * 16}px` }}
         >
-          {open ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />}
-          <FolderIcon className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
-          <span className="text-xs font-medium text-foreground font-mono">{node.name}</span>
+          {open ? <ChevronDown className="w-3.5 h-3.5 text-[#485478] flex-shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-[#485478] flex-shrink-0" />}
+          <FolderIcon className="w-3.5 h-3.5 text-[#3c67ea] flex-shrink-0" />
+          <span className="text-[0.75rem] uppercase tracking-[0.08em] font-medium text-[#242d48] font-mono">{node.name}</span>
           {node.children && (
-            <span className="text-[10px] text-muted-foreground/40 ml-auto">{node.children.length} files</span>
+            <span className="text-[0.75rem] text-[#485478] ml-auto">{node.children.length} files</span>
           )}
         </button>
         {open && node.children?.map((child) => (
@@ -89,13 +89,13 @@ function FileRow({ node, depth = 0 }: { node: FileNode; depth?: number }) {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-black/[0.03] transition-colors cursor-default"
+      className="flex items-center gap-2 px-3 py-1.5 rounded-[4px] hover:bg-[#f0f1f7] transition-colors cursor-default"
       style={{ paddingLeft: `${12 + depth * 16}px` }}
     >
       <div className="w-3.5 flex-shrink-0" />
-      <FileText className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
-      <span className={cn("text-xs font-mono text-muted-foreground flex-1")}>{node.name}</span>
-      {node.size && <span className="text-[10px] text-muted-foreground/30 font-mono flex-shrink-0">{node.size}</span>}
+      <FileText className="w-3.5 h-3.5 text-[#485478] flex-shrink-0" />
+      <span className={cn("text-[0.75rem] uppercase tracking-[0.08em] font-mono text-[#485478] flex-1")}>{node.name}</span>
+      {node.size && <span className="text-[0.75rem] text-[#485478] font-mono flex-shrink-0">{node.size}</span>}
     </div>
   );
 }
@@ -105,15 +105,15 @@ export default function FileSystem() {
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
-          <FolderOpen className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">File System</h1>
+          <FolderOpen className="w-6 h-6 text-[#3c67ea]" />
+          <h1 className="text-[1.375rem] leading-[1.5] font-semibold text-[#242d48]">File System</h1>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[0.875rem] leading-[1.2] text-[#485478]">
           Agent workspace — identity files, skills, knowledge base, and per-client engagement files
         </p>
       </div>
 
-      <div className="glass-card rounded-xl p-2">
+      <div className="bg-white border border-[#e6ebf8] shadow-[0_2px_4px_rgba(36,45,72,0.15)] rounded-[4px] p-2">
         {FILE_TREE.map((node) => (
           <FileRow key={node.name} node={node} />
         ))}

@@ -1,10 +1,7 @@
 "use client";
-
 import { useState } from "react";
 import { IconReceipt } from "@tabler/icons-react";
-import {
-  Receipt, Eye, Send, CheckCircle2, Loader2, FileText, Lock, Clock, XCircle, Download,
-} from "lucide-react";
+import { Receipt, Eye, Send, CheckCircle2, FileText, Lock, Clock, XCircle, Download,  } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +11,7 @@ import { InvoiceTemplate } from "@/components/rev-rec/InvoiceTemplate";
 import type { Session } from "@/lib/rev-rec/types";
 import { getInvoices, type InvoiceView, type InvoiceStatus } from "@/lib/rev-rec/view";
 import { cn } from "@/lib/utils";
-
+import { Loader } from "@/components/ui/loader";
 async function postGate2(sessionId: string, invoiceId: string): Promise<Session> {
   const res = await fetch(`/api/companies/${sessionId}/gate2`, {
     method: "POST",
@@ -25,15 +22,13 @@ async function postGate2(sessionId: string, invoiceId: string): Promise<Session>
   if (!res.ok) throw new Error(data.error ?? "Approval failed");
   return data.session as Session;
 }
-
 const STATUS_PILL: Record<InvoiceStatus, { label: string; cls: string; Icon: React.ComponentType<{ className?: string }> }> = {
-  actionable: { label: "Actionable", cls: "bg-warning/10 text-warning border-warning/20", Icon: Send },
-  scheduled:  { label: "Scheduled",  cls: "bg-slate-400/10 text-slate-500 border-slate-300/30", Icon: Clock },
-  paid:       { label: "Sent",       cls: "bg-success/10 text-success border-success/20", Icon: CheckCircle2 },
-  archived:   { label: "Archived",   cls: "bg-destructive/10 text-destructive border-destructive/20", Icon: XCircle },
-  rejected:   { label: "Rejected",   cls: "bg-destructive/10 text-destructive border-destructive/20", Icon: XCircle },
+  actionable: { label: "Actionable", cls: "bg-white text-[#ffbb16] border-[#ffbb16]", Icon: Send },
+  scheduled:  { label: "Scheduled",  cls: "bg-[#f0f1f7] text-[#485478] border-[#e6ebf8]/30", Icon: Clock },
+  paid:       { label: "Sent",       cls: "bg-white text-[#14a687] border-[#14a687]", Icon: CheckCircle2 },
+  archived:   { label: "Archived",   cls: "bg-white text-[#db3743] border-[#db3743]", Icon: XCircle },
+  rejected:   { label: "Rejected",   cls: "bg-white text-[#db3743] border-[#db3743]", Icon: XCircle },
 };
-
 // For the bulk Bills view we surface only the most relevant invoice(s) per
 // customer: the single "actionable" one (if any) plus the most recent "paid"
 // one. Anything else (scheduled / archived) is hidden here — open the customer
@@ -48,7 +43,6 @@ function pickHighlightInvoices(invoices: InvoiceView[]): InvoiceView[] {
   if (picked.length === 0 && invoices.length > 0) picked.push(invoices[0]);
   return picked;
 }
-
 export default function BillsAgentPage() {
   return (
     <AgentBulkShell
@@ -68,7 +62,7 @@ export default function BillsAgentPage() {
         const actionable = getInvoices(s).some((i) => i.status === "actionable");
         if (!actionable) return null;
         return (
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20">
+          <span className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border bg-white text-[#ffbb16] border-[#ffbb16]">
             Action needed
           </span>
         );
@@ -78,11 +72,11 @@ export default function BillsAgentPage() {
         const actionable = invs.filter((i) => i.status === "actionable").length;
         return (
           <span className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[0.75rem] text-[#485478]">
               {invs.length} invoice{invs.length === 1 ? "" : "s"}
             </span>
             {actionable > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20">
+              <span className="inline-flex items-center gap-1 text-[0.75rem] font-medium px-1.5 py-0.5 rounded-[2px] border bg-white text-[#ffbb16] border-[#ffbb16]">
                 {actionable} actionable
               </span>
             )}
@@ -95,37 +89,33 @@ export default function BillsAgentPage() {
     />
   );
 }
-
 function CustomerBills({ session, refresh }: { session: Session; refresh: () => void }) {
   const invoices = getInvoices(session);
   const highlights = pickHighlightInvoices(invoices);
   const [preview, setPreview] = useState<InvoiceView | null>(null);
-
   if (invoices.length === 0) {
     return (
-      <div className="rounded-lg border border-primary/[0.07] bg-background/40 p-4 text-center">
-        <Receipt className="w-5 h-5 text-primary/30 mx-auto mb-1.5" />
-        <p className="text-[12px] text-muted-foreground">No invoices generated.</p>
+      <div className="rounded-[4px] border border-[#e6ebf8] bg-white p-4 text-center">
+        <Receipt className="w-5 h-5 text-[#3c67ea] mx-auto mb-1.5" />
+        <p className="text-[0.75rem] text-[#485478]">No invoices generated.</p>
       </div>
     );
   }
-
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Receipt className="w-3.5 h-3.5 text-primary" />
+        <div className="w-7 h-7 rounded-[4px] bg-[#f0f1f7] flex items-center justify-center">
+          <Receipt className="w-3.5 h-3.5 text-[#3c67ea]" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-foreground leading-tight">Action items — invoices</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[0.875rem] leading-[1.2] font-semibold text-[#242d48] leading-[1.2]">Action items — invoices</p>
+          <p className="text-[0.75rem] text-[#485478]">
             Showing {highlights.length} of {invoices.length} ·
             {" "}{invoices.filter((i) => i.status === "paid").length} sent
             {" · "}{invoices.filter((i) => i.status === "actionable").length} ready to send
           </p>
         </div>
       </div>
-
       {highlights.map((inv) => (
         <BulkInvoiceCard
           key={inv.id}
@@ -137,12 +127,11 @@ function CustomerBills({ session, refresh }: { session: Session; refresh: () => 
           onPreview={() => setPreview(inv)}
         />
       ))}
-
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-auto p-0">
-          <DialogHeader className="px-5 py-3 border-b border-border">
-            <DialogTitle className="flex items-center gap-2 text-sm">
-              <FileText className="w-4 h-4 text-primary" /> Invoice {preview?.id}
+          <DialogHeader className="px-5 py-3 border-b border-[#e6ebf8]">
+            <DialogTitle className="flex items-center gap-2 text-[0.875rem] leading-[1.2]">
+              <FileText className="w-4 h-4 text-[#3c67ea]" /> Invoice {preview?.id}
             </DialogTitle>
           </DialogHeader>
           {preview && (
@@ -155,7 +144,6 @@ function CustomerBills({ session, refresh }: { session: Session; refresh: () => 
     </div>
   );
 }
-
 function BulkInvoiceCard({
   inv, onApprove, onPreview,
 }: {
@@ -168,40 +156,38 @@ function BulkInvoiceCard({
   const StatusIcon = meta.Icon;
   const unlocked = inv.lockState === "unlocked";
   const sent = inv.status === "paid";
-
   async function handleSend() {
     setSending(true);
     try { await onApprove(); }
     finally { setSending(false); }
   }
-
   return (
     <div className={cn(
-      "rounded-xl border border-primary/[0.08] bg-background/40 p-3 transition-all",
-      unlocked && "ring-1 ring-primary/30 shadow-sm"
+      "rounded-[4px] border border-[#e6ebf8] bg-white p-3 transition-all",
+      unlocked && "ring-1 ring-primary/30 shadow-[0_2px_4px_rgba(36,45,72,0.15)]"
     )}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-foreground font-mono">{inv.id}</span>
+            <span className="text-[0.875rem] leading-[1.2] font-semibold text-[#242d48] font-mono">{inv.id}</span>
             {inv.sequence != null && (
-              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/5 text-primary/70">
+              <span className="text-[0.75rem] uppercase tracking-[0.08em] px-1.5 py-0.5 rounded-[2px] bg-[#f0f1f7] text-[#3c67ea]">
                 Cycle {inv.sequence}
               </span>
             )}
-            <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border", meta.cls)}>
+            <span className={cn("inline-flex items-center gap-1 text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border", meta.cls)}>
               <StatusIcon className="w-3 h-3" /> {meta.label}
             </span>
             {!unlocked && !sent && inv.status === "scheduled" && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-[0.75rem] text-[#485478]">
                 <Lock className="w-3 h-3" /> Unlocks after the current invoice is sent
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-[12px] text-muted-foreground">
-            {inv.periodLabel && <span>Period: <span className="text-foreground/70">{inv.periodLabel}</span></span>}
-            {inv.total && <span>Total: <span className="text-foreground/70 font-mono">{inv.total}</span></span>}
-            {inv.dueDate && <span>Due: <span className="text-foreground/70">{inv.dueDate}</span></span>}
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-[0.75rem] text-[#485478]">
+            {inv.periodLabel && <span>Period: <span className="text-[#242d48]">{inv.periodLabel}</span></span>}
+            {inv.total && <span>Total: <span className="text-[#242d48] font-mono">{inv.total}</span></span>}
+            {inv.dueDate && <span>Due: <span className="text-[#242d48]">{inv.dueDate}</span></span>}
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -209,12 +195,12 @@ function BulkInvoiceCard({
             <Eye className="w-3.5 h-3.5" /> Preview
           </Button>
           {sent ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-success">
+            <span className="inline-flex items-center gap-1 text-[0.75rem] font-medium text-[#14a687]">
               <Download className="w-3.5 h-3.5" /> Sent
             </span>
           ) : unlocked ? (
             <Button size="sm" className="gap-1.5" disabled={sending} onClick={handleSend}>
-              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              {sending ? <Loader size="inline" /> : <Send className="w-3.5 h-3.5" />}
               Approve &amp; Send
             </Button>
           ) : null}
@@ -223,17 +209,14 @@ function BulkInvoiceCard({
     </div>
   );
 }
-
 function BulkApproveButton({ sessions, refresh }: { sessions: Session[]; refresh: () => void }) {
   const [busy, setBusy] = useState(false);
-
   const targets = sessions
     .map((s) => {
       const actionable = getInvoices(s).find((i) => i.status === "actionable");
       return actionable ? { sessionId: s.session_id, invoiceId: actionable.id } : null;
     })
     .filter((x): x is { sessionId: string; invoiceId: string } => x != null);
-
   async function approveAll() {
     if (targets.length === 0) return;
     setBusy(true);
@@ -246,10 +229,9 @@ function BulkApproveButton({ sessions, refresh }: { sessions: Session[]; refresh
       setBusy(false);
     }
   }
-
   return (
     <Button size="sm" className="gap-1.5" disabled={busy || targets.length === 0} onClick={approveAll}>
-      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+      {busy ? <Loader size="inline" /> : <Send className="w-3.5 h-3.5" />}
       Bulk approve &amp; send ({targets.length})
     </Button>
   );

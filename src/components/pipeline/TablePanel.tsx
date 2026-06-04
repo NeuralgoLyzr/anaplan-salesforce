@@ -52,12 +52,12 @@ export function TablePanel<T extends Record<string, unknown>>({
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-primary/[0.07] bg-primary/[0.02]">
+            <tr className="border-b border-[#e6ebf8] bg-[#f0f1f7]]">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap",
+                    "px-4 py-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#485478] whitespace-nowrap",
                     col.width
                   )}
                 >
@@ -71,20 +71,20 @@ export function TablePanel<T extends Record<string, unknown>>({
               <tr
                 key={i}
                 className={cn(
-                  "border-b border-primary/[0.05] hover:bg-primary/[0.03] transition-colors last:border-0",
-                  striped && i % 2 === 1 && "bg-primary/[0.015]"
+                  "border-b border-[#e6ebf8] hover:bg-[#f0f1f7]] transition-colors last:border-0",
+                  striped && i % 2 === 1 && "bg-[#f0f1f7]]"
                 )}
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={cn("px-4 py-3 text-sm text-foreground/80", col.width)}
+                    className={cn("px-4 py-3 text-[0.875rem] leading-[1.2] text-[#242d48]", col.width)}
                   >
                     {col.render
                       ? col.render(row[col.key], row)
                       : (row[col.key] != null
                         ? (row[col.key] as ReactNode)
-                        : <span className="text-muted-foreground/30">—</span>
+                        : <span className="text-[#485478]">—</span>
                       )}
                   </td>
                 ))}

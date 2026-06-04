@@ -25,17 +25,19 @@ export interface StatusMeta {
   busy: boolean;
 }
 
+// ADS Badge spec: bg-white, explicit hex border+text, 2px radius, uppercase
+// blueberry token: 12px/500/uppercase — applied at call site
 export const STATUS_META: Record<SessionStatus, StatusMeta> = {
-  extracting: { label: "Extracting", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
-  reading:    { label: "Reading contracts", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
-  pricing:    { label: "Pricing", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
-  anomaly:    { label: "Anomaly review", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
-  gate1:      { label: "Needs approval", pill: "bg-warning/10 text-warning border-warning/20", busy: false },
-  billing:    { label: "Generating bills", pill: "bg-primary/10 text-primary border-primary/20", busy: true },
-  gate2:      { label: "Action needed", pill: "bg-warning/10 text-warning border-warning/20", busy: false },
-  complete:   { label: "Complete", pill: "bg-success/10 text-success border-success/20", busy: false },
-  rejected:   { label: "Rejected", pill: "bg-destructive/10 text-destructive border-destructive/20", busy: false },
-  failed:     { label: "Failed", pill: "bg-destructive/10 text-destructive border-destructive/20", busy: false },
+  extracting: { label: "Extracting",        pill: "bg-[#f0f1f7] text-[#3c67ea] border-[#e6ebf8]", busy: true  },
+  reading:    { label: "Reading contracts",  pill: "bg-[#f0f1f7] text-[#3c67ea] border-[#e6ebf8]", busy: true  },
+  pricing:    { label: "Pricing",            pill: "bg-[#f0f1f7] text-[#3c67ea] border-[#e6ebf8]", busy: true  },
+  anomaly:    { label: "Anomaly review",     pill: "bg-[#f0f1f7] text-[#3c67ea] border-[#e6ebf8]", busy: true  },
+  gate1:      { label: "Needs approval",     pill: "bg-white text-[#ffbb16] border-[#ffbb16]",       busy: false },
+  billing:    { label: "Generating bills",   pill: "bg-[#f0f1f7] text-[#3c67ea] border-[#e6ebf8]", busy: true  },
+  gate2:      { label: "Action needed",      pill: "bg-white text-[#ffbb16] border-[#ffbb16]",       busy: false },
+  complete:   { label: "Complete",           pill: "bg-white text-[#14a687] border-[#14a687]",       busy: false },
+  rejected:   { label: "Rejected",           pill: "bg-white text-[#db3743] border-[#db3743]",       busy: false },
+  failed:     { label: "Failed",             pill: "bg-white text-[#db3743] border-[#db3743]",       busy: false },
 };
 
 export function isBusy(status: SessionStatus): boolean {

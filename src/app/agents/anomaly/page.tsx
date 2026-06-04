@@ -82,13 +82,13 @@ export default function AnomalyAgentPage() {
         if (pending === 0) return null;
         if (blocking > 0) {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-destructive/10 text-destructive border-destructive/20">
+            <span className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border bg-white text-[#db3743] border-[#db3743]">
               Action needed · {blocking} blocking
             </span>
           );
         }
         return (
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-warning/10 text-warning border-warning/20">
+          <span className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium px-2 py-0.5 rounded-[2px] border bg-white text-[#ffbb16] border-[#ffbb16]">
             Action needed
           </span>
         );
@@ -98,16 +98,16 @@ export default function AnomalyAgentPage() {
         const { total, blocking } = getActionItems(s);
         return (
           <span className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[0.75rem] text-[#485478]">
               {findings} finding{findings === 1 ? "" : "s"}
             </span>
             {total > 0 && (
-              <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+              <span className="text-[0.75rem] font-medium bg-[#f0f1f7] text-[#3c67ea] px-1.5 py-0.5 rounded-[2px]">
                 {total} action{total === 1 ? "" : "s"}
               </span>
             )}
             {blocking > 0 && (
-              <span className="text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded-full">
+              <span className="text-[0.75rem] font-medium bg-white text-[#db3743] border border-[#db3743] px-1.5 py-0.5 rounded-[2px]">
                 {blocking} blocking
               </span>
             )}

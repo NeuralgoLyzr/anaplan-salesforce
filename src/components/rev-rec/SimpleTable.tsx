@@ -17,19 +17,19 @@ export function SimpleTable({ view, emptyLabel = "No data.", className }: Props)
 
   if (!columns.length || !rows.length) {
     return (
-      <p className="text-xs text-muted-foreground py-2">{emptyLabel}</p>
+      <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[#485478] py-2">{emptyLabel}</p>
     );
   }
 
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-primary/[0.07]", className)}>
-      <table className="w-full text-left text-[12px]">
-        <thead className="bg-primary/[0.03]">
+    <div className={cn("overflow-x-auto rounded-[4px] border border-[#e6ebf8]", className)}>
+      <table className="w-full text-left text-[0.75rem]">
+        <thead className="bg-[#f0f1f7]]">
           <tr>
             {columns.map((c) => (
               <th
                 key={c}
-                className="px-3 py-2 font-semibold uppercase tracking-wide text-[10px] text-muted-foreground whitespace-nowrap"
+                className="px-3 py-2 font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-[#485478] whitespace-nowrap"
               >
                 {humanizeKey(c)}
               </th>
@@ -38,7 +38,7 @@ export function SimpleTable({ view, emptyLabel = "No data.", className }: Props)
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-t border-primary/[0.05] hover:bg-primary/[0.02]">
+            <tr key={i} className="border-t border-[#e6ebf8] hover:bg-[#f0f1f7]]">
               {columns.map((c) => {
                 const v = row[c];
                 const isNum = typeof v === "number";
@@ -46,7 +46,7 @@ export function SimpleTable({ view, emptyLabel = "No data.", className }: Props)
                   <td
                     key={c}
                     className={cn(
-                      "px-3 py-1.5 align-top whitespace-nowrap text-foreground/80",
+                      "px-3 py-1.5 align-top whitespace-nowrap text-[#242d48]",
                       isNum && "font-mono tabular-nums text-right",
                     )}
                   >
