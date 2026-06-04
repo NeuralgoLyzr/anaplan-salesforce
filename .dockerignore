@@ -1,32 +1,17 @@
-# Keep Docker build context small and avoid leaking secrets into the image.
-# The worker.Dockerfile only COPYs scripts/worker.mjs, but Docker still
-# transfers the whole context to the daemon — exclude bloat aggressively.
-
 # Build artifacts
 .next
 out
 dist
 build
 
-# Node modules (worker has zero deps)
+# Node modules
 node_modules
 
-# Local env / secrets — never bake these into the image
+# Local env / secrets
 .env
 .env.*
 !.env.example
 !.env.local.example
-
-# Source code (worker doesn't need any of it)
-src
-public
-components.json
-next.config.ts
-next-env.d.ts
-tsconfig.json
-postcss.config.mjs
-tailwind.config.*
-eslint.config.mjs
 
 # Editor / tooling
 .claude
@@ -40,20 +25,7 @@ eslint.config.mjs
 .gitignore
 .gitattributes
 
-# Tests / fixtures (if any)
+# Tests / fixtures
 __tests__
 *.test.*
 *.spec.*
-
-# Other scripts we don't need in the worker image
-scripts/approve-drive.mjs
-scripts/backfill-company-names.mjs
-scripts/inspect-anomaly.mjs
-scripts/inspect-monthly.mjs
-scripts/inspect-task.mjs
-scripts/probe-lyzr.mjs
-scripts/raw.mjs
-scripts/rerun-billing.mjs
-scripts/rerun.mjs
-scripts/seed-billing-v2.mjs
-scripts/test-parse.mjs

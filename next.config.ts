@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // The gitagent SDK is Node-native (git, fs, child_process). Keep it external so
   // Next doesn't try to bundle it into the server build.
   serverExternalPackages: ["@open-gitagent/gitagent"],
