@@ -11,6 +11,7 @@ import {
     IconShieldExclamation,
     IconReceipt,
     IconAdjustments,
+    IconActivity,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/ui/nav-main"
@@ -35,6 +36,7 @@ const data = {
     },
     navTop: [
         { title: "Dashboard",     url: "/dashboard",     icon: IconDashboard     },
+        { title: "Agent Traces",  url: "/agent-trace",   icon: IconActivity      },
         { title: "Agent Console", url: "/console",       icon: IconTerminal2     },
         { title: "Customers",     url: "/customers",     icon: IconBuildingBank  },
         { title: "Configuration", url: "/agents/config", icon: IconAdjustments   },

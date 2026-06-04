@@ -343,6 +343,29 @@ body {
   border-radius: 10px !important;
 }
 
+/* ─── ADS Loader keyframes ─────────────────────────────────────────────────
+   Required by src/components/ui/loader.tsx (3-disc ADS spinner).
+   loader-rotate-all:    outer wrapper constant 2s spin
+   loader-rotate-first:  disc 2 — 1.5s ease-in-out with 75% hold
+   loader-rotate-second: disc 3 — 1.5s ease-in-out with 50% hold          */
+
+@keyframes ads-loader-rotate-all {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes ads-loader-rotate-first {
+  0%   { transform: scale(1) rotate(0deg); }
+  75%  { transform: scale(1) rotate(360deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+@keyframes ads-loader-rotate-second {
+  0%   { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1) rotate(360deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
 /* ─── Company Themes ─────────────────────────────────────── */
 
 [data-theme="accenture"] {
