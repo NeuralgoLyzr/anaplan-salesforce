@@ -1,10 +1,9 @@
 import path from "path";
 import { promises as fs } from "fs";
+import { getAgentDir } from "@/lib/agent-dir";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const AGENT_DIR = path.join(process.cwd(), "agent");
 
 // Pull `name` and `description` out of a SKILL.md YAML frontmatter block.
 function parseFrontmatter(md: string): { name?: string; description?: string } {
@@ -18,8 +17,8 @@ function parseFrontmatter(md: string): { name?: string; description?: string } {
   return out;
 }
 
-async function listSkills() {
-  const dir = path.join(AGENT_DIR, "skills");
+async function listSkills(agentDir: string) {
+  const dir = path.join(agentDir, "skills");
   const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
   const skills = [];
   for (const e of entries) {
@@ -32,13 +31,14 @@ async function listSkills() {
   return skills;
 }
 
-async function listKnowledge() {
-  const dir = path.join(AGENT_DIR, "knowledge");
+async function listKnowledge(agentDir: string) {
+  const dir = path.join(agentDir, "knowledge");
   const files = await fs.readdir(dir).catch(() => []);
   return files.filter((f) => f.endsWith(".md")).sort();
 }
 
 export async function GET() {
-  const [skills, knowledge] = await Promise.all([listSkills(), listKnowledge()]);
+  const agentDir = await getAgentDir();
+  const [skills, knowledge] = await Promise.all([listSkills(agentDir), listKnowledge(agentDir)]);
   return Response.json({ skills, knowledge });
 }

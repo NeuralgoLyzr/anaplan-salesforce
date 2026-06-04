@@ -1,14 +1,13 @@
 import { NextRequest } from "next/server";
-import path from "path";
 import { query, tool } from "@open-gitagent/gitagent";
 import { listSessions } from "@/lib/rev-rec/repo";
+import { getAgentDir } from "@/lib/agent-dir";
 
 // gitagent is Node-native (git/fs/child_process) — must run on the Node runtime.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const AGENT_DIR = path.join(process.cwd(), "agent");
 const MODEL = process.env.GITAGENT_MODEL || "anthropic:claude-sonnet-4-5-20250929";
 
 // ── Custom tools the copilot can call ────────────────────────────────────────
@@ -108,12 +107,14 @@ export async function POST(req: NextRequest) {
   const abortController = new AbortController();
   req.signal.addEventListener("abort", () => abortController.abort());
 
+  const agentDir = await getAgentDir();
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
         const q = query({
           prompt: message,
-          dir: AGENT_DIR,
+          dir: agentDir,
           model: MODEL,
           tools: [listContracts, createArtifact],
           allowedTools: ["read", "list_contracts", "create_artifact"],
