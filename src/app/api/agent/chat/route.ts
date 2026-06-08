@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
+import { randomUUID } from "crypto";
 import { query, tool } from "@open-gitagent/gitagent";
-import { listSessions } from "@/lib/rev-rec/repo";
+import { listSessions, getSession } from "@/lib/rev-rec/repo";
 import { getAgentDir } from "@/lib/agent-dir";
+import { upsertTraces } from "@/lib/db/agent-traces";
 
 // gitagent is Node-native (git/fs/child_process) — must run on the Node runtime.
 export const runtime = "nodejs";
@@ -34,6 +36,46 @@ const listContracts = tool(
       return { text: JSON.stringify(slim), details: { count: slim.length } };
     } catch (e) {
       return `Could not load contracts: ${(e as Error).message}`;
+    }
+  },
+);
+
+// Contract detail — lets the agent answer revenue breakdown questions per contract.
+// Priority 5 fix: without this, the copilot had no way to fetch monthly projections
+// and would redirect the user instead of answering.
+const getContractDetail = tool(
+  "get_contract_detail",
+  "Get the full revenue schedule for a specific contract — monthly projections, per-line allocations, and totals. Use this to answer questions like 'show me Ontario April 2026 revenue', 'what is the breakdown for contract X', or 'total revenue recognised for Y'. Call list_contracts first to find the session_id, then call this.",
+  {
+    properties: {
+      session_id: { type: "string", description: "The session ID of the contract (returned by list_contracts)" },
+    },
+    required: ["session_id"],
+  },
+  async (args: { session_id: string }) => {
+    try {
+      const session = await getSession(String(args.session_id));
+      if (!session) return `No contract found with session ID: ${args.session_id}`;
+      const pricing = session.agent_outputs?.pricing;
+      if (!pricing?.json) {
+        return `Pricing data not yet available for session ${args.session_id} (pipeline status: ${session.status}).`;
+      }
+      const readerJson = session.agent_outputs?.reader?.json ?? {};
+      const contractTotal =
+        readerJson.contract_total_value ??
+        readerJson.total_contract_value ??
+        pricing.json.contract_total_value ??
+        null;
+      return JSON.stringify({
+        contract_id: session.session_id,
+        company: session.company_name,
+        status: session.status,
+        contract_total_value: contractTotal,
+        allocation: pricing.json.allocation ?? null,
+        monthly_projection: pricing.json.monthly_projection ?? null,
+      });
+    } catch (e) {
+      return `Could not load contract detail: ${(e as Error).message}`;
     }
   },
 );
@@ -109,15 +151,25 @@ export async function POST(req: NextRequest) {
 
   const agentDir = await getAgentDir();
 
+  // Priority 7 — trace every copilot query in Agent Traces (same DB the UI reads).
+  const traceId = `copilot-${randomUUID()}`;
+  const traceStart = new Date().toISOString();
+  const traceStartMs = Date.now();
+
   const stream = new ReadableStream({
     async start(controller) {
+      let totalTokens = 0;
+      let traceStatus: "success" | "error" = "success";
+
       try {
         const q = query({
           prompt: message,
           dir: agentDir,
           model: MODEL,
-          tools: [listContracts, createArtifact],
-          allowedTools: ["read", "list_contracts", "create_artifact"],
+          // Priority 5 — added getContractDetail so the copilot can answer
+          // per-contract revenue breakdown questions instead of redirecting.
+          tools: [listContracts, getContractDetail, createArtifact],
+          allowedTools: ["read", "list_contracts", "get_contract_detail", "create_artifact"],
           maxTurns: 24,
           abortController,
           ...(sessionId ? { sessionId } : {}),
@@ -158,21 +210,42 @@ export async function POST(req: NextRequest) {
               break;
 
             case "assistant":
-              if (msg.errorMessage) sse(controller, { type: "error", error: msg.errorMessage });
-              if (msg.usage) sse(controller, { type: "usage", usage: msg.usage });
+              if (msg.errorMessage) {
+                sse(controller, { type: "error", error: msg.errorMessage });
+                traceStatus = "error";
+              }
+              if (msg.usage) {
+                sse(controller, { type: "usage", usage: msg.usage });
+                totalTokens += (msg.usage.inputTokens ?? 0) + (msg.usage.outputTokens ?? 0);
+              }
               break;
 
             case "system":
-              if (msg.subtype === "error") sse(controller, { type: "error", error: msg.content });
+              if (msg.subtype === "error") {
+                sse(controller, { type: "error", error: msg.content });
+                traceStatus = "error";
+              }
               break;
           }
         }
 
         sse(controller, { type: "done" });
       } catch (e) {
+        traceStatus = "error";
         sse(controller, { type: "error", error: (e as Error).message });
       } finally {
         controller.close();
+        // Write copilot trace to MongoDB so it appears in Agent Traces UI.
+        upsertTraces([{
+          id: traceId,
+          agent_id: "copilot",
+          session_id: sessionId ?? traceId,
+          status: traceStatus,
+          start_time: traceStart,
+          end_time: new Date().toISOString(),
+          duration_ms: Date.now() - traceStartMs,
+          total_tokens: totalTokens,
+        }]).catch(() => {});
       }
     },
     cancel() {

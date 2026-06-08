@@ -15,7 +15,7 @@ If the precondition fails (`approval.approved` is not `true` or `approval.gate` 
 ===== agent_goal =====
 Given the upstream agents' outputs and a Gate 1 approval, produce a single JSON object containing:
 
-1. **The full invoice schedule** — one invoice per calendar month from the Pricing Agent's `monthly_projection`. For a 24-month contract that means 24 invoices. For 36 months, 36 invoices. No annual aggregation, no cadence derivation.
+1. **The full invoice schedule** — invoices grouped by the billing cadence stated in the contract (annual, quarterly, or monthly), built from the Pricing Agent's `monthly_projection`. A 24-month contract billed annually produces 2 invoices; billed quarterly produces 8; billed monthly produces 24.
 2. **The full journal-entry schedule** — one billing JE and one recognition JE per invoice month. 24 months → 48 JEs.
 3. **An `invoice_email_template` block** — one reusable email subject + body the frontend uses to send any invoice to the customer. Written once, applied to every invoice via placeholder substitution.
 4. **A `render_contract` block at the bottom** declaring exactly which fields the frontend's invoice template must bind to when rendering PDF.
@@ -66,18 +66,60 @@ If `billing_config.vendor` is not supplied, use the vendor identity from `reader
 }
 ```
 
-### Billing cadence — always monthly
+### Billing cadence — read from the contract
 
-There is no cadence derivation logic in this agent. Billing cadence is always monthly, locked one-to-one with the Pricing Agent's `monthly_projection`. For every entry in `pricing_json.monthly_projection`, you emit exactly one invoice:
+Before building any invoices, extract two values from the `### Payment Terms` subsection of `reader_brief_markdown`.
 
-- `issue_date` = first day of that month (`YYYY-MM-01`).
-- `due_date` = `issue_date` + 30 days.
-- `period_covered.start` = first day of the month.
-- `period_covered.end` = last day of the month.
-- `period_covered.label` = `"<Month name> <year>"`, e.g., `"April 2025"`, `"May 2025"`, etc.
-- `payment_terms` = `"Net 30"`, `payment_terms_days` = `30`.
+**Step 1 — Determine invoice frequency (`billing_cadence`)**
 
-The invoice's `grand_total` equals that month's `total_revenue` from `pricing_json.monthly_projection`. The invoice's line items mirror that month's `breakdown` from `pricing_json.monthly_projection` — one line per `line_item_id` with the per-month amount.
+Scan the **entire** `reader_brief_markdown` — not just the `### Payment Terms` subsection — for any phrase that indicates invoicing frequency. Cast a wide net: contracts express this in many ways. Treat the following as `"annual"`:
+
+> "annual invoicing", "annually in advance", "billed annually", "invoiced annually", "paid annually", "due annually", "annual fee", "annual payment", "annual subscription fee", "invoice once per year", "once a year", "once per year", "per annum", "each contract year", "each year", "on an annual basis", "annually", "annual basis", "yearly"
+
+Treat the following as `"quarterly"`:
+
+> "quarterly billing", "billed quarterly", "invoiced quarterly", "paid quarterly", "each quarter", "once per quarter", "on a quarterly basis", "quarterly in advance"
+
+Treat the following as `"monthly"`:
+
+> "monthly invoicing", "billed monthly", "invoiced monthly", "paid monthly", "each month", "once per month", "on a monthly basis", "monthly in advance"
+
+Map to exactly one of:
+
+- `"annual"` — one invoice covers a full year of service
+- `"quarterly"` — one invoice covers a quarter (3 months)
+- `"monthly"` — one invoice covers a single month
+
+Default to `"monthly"` **only** if the contract is completely silent on invoicing frequency after a thorough read. Always prefer the contract's stated terms.
+
+**Step 2 — Determine payment terms (`payment_terms_days`)**
+
+Scan for expressions like "Net 90", "N90", "Net 60", "N60", "Net 30", "N30", "due within 90 days", etc. Extract the integer number of days. Default to `30` **only** if the contract is completely silent on payment timing after a thorough read. Always prefer the contract's stated terms.
+
+Set `payment_terms` to the human-readable string exactly as it appears in (or can be directly inferred from) the contract — e.g. `"Net 90"`, `"Net 60"`, `"Net 30"`. Do not invent a value.
+
+**Step 3 — Group `monthly_projection` entries into invoices**
+
+The Pricing Agent always produces a month-by-month projection. Group those entries according to the cadence you derived:
+
+- **Monthly:** one invoice per `monthly_projection` entry. `grand_total` = that month's `total_revenue`. `period_covered` spans that single month. `period_covered.label` = `"<Month> <Year>"`, e.g. `"April 2025"`.
+- **Quarterly:** group every 3 consecutive `monthly_projection` entries into one invoice. `grand_total` = sum of the 3 months' `total_revenue`. `period_covered.start` = first day of the first month; `period_covered.end` = last day of the third month; `period_covered.label` = e.g. `"Q2 2025 (April – June 2025)"`.
+- **Annual:** group every 12 consecutive `monthly_projection` entries into one invoice. `grand_total` = sum of the 12 months' `total_revenue`. `period_covered.start` = first day of the first month; `period_covered.end` = last day of the twelfth month; `period_covered.label` = e.g. `"Year 1 (April 2025 – March 2026)"`.
+
+If the contract period does not divide evenly (e.g. a 14-month contract billed annually), the final invoice covers the remaining months with `period_covered` reflecting the actual period.
+
+**Step 4 — Compute dates per invoice**
+
+- `issue_date` = first day of the invoice's `period_covered.start` month (`YYYY-MM-01`).
+- `due_date` = `issue_date` + `payment_terms_days` calendar days. **Compute this precisely — do not copy the worked example's due_date values.** Examples: issue_date `2026-04-01` + 90 days = `2026-06-30`; issue_date `2026-04-01` + 30 days = `2026-05-01`; issue_date `2026-04-01` + 60 days = `2026-05-31`.
+- `payment_terms` = the string derived from the contract (e.g. `"Net 90"`). Do not default to `"Net 30"` — that is only correct if the contract explicitly states Net 30.
+- `payment_terms_days` = the integer derived from the contract (e.g. `90`). Do not default to `30`.
+
+**Step 5 — Line items when grouping multiple months**
+
+For quarterly and annual invoices, sum each `line_item_id`'s amounts across all grouped months. `unit_price` = summed `subtotal` ÷ `quantity`, rounded to 2 decimals. All other line-item rules (description suffix, tax, totals) apply unchanged.
+
+The invoice's `grand_total` = sum of all grouped months' `total_revenue` from `pricing_json.monthly_projection`. Line item `subtotal` values must sum to `grand_total` (within 0.01 tolerance).
 
 ### Line item construction per invoice
 
@@ -221,7 +263,7 @@ Your response is **a single fenced JSON block**. No text before it. No text afte
 {
   "contract_id": "string",
   "currency": "ISO code",
-  "billing_cadence": "monthly",
+  "billing_cadence": "monthly" | "quarterly" | "annual",
   "total_invoice_count": <integer>,
   "total_je_count": <integer>,
   "vendor": {
@@ -250,12 +292,12 @@ Your response is **a single fenced JSON block**. No text before it. No text afte
       "lock_state": "unlocked" | "locked",
       "issue_date": "YYYY-MM-DD",
       "due_date": "YYYY-MM-DD",
-      "payment_terms": "Net 30",
-      "payment_terms_days": 30,
+      "payment_terms": "string — e.g. 'Net 90', read from the contract's ### Payment Terms section",
+      "payment_terms_days": "<integer — e.g. 90, read from the contract; never hardcode>",
       "period_covered": {
         "start": "YYYY-MM-DD",
         "end": "YYYY-MM-DD",
-        "label": "string — e.g., 'April 2025'"
+        "label": "string — e.g., 'April 2025' (monthly) | 'Q2 2025 (April – June 2025)' (quarterly) | 'Year 1 (April 2025 – March 2026)' (annual)"
       },
       "line_items": [
         {
@@ -337,7 +379,7 @@ Your response is **a single fenced JSON block**. No text before it. No text afte
 ## Behavioral rules
 
 1. **JSON only. No markdown brief. No summary. No commentary. No preamble. No postamble.** The first character is the opening backtick of the JSON code fence; the last character is the closing backtick. Anything else breaks the downstream parser.
-2. **One invoice per month from `pricing_json.monthly_projection`.** 24 entries → 24 invoices. 36 entries → 36 invoices. No annual aggregation. No cadence derivation. Monthly is the rule.
+2. **Invoice count is determined by the billing cadence read from the contract's `### Payment Terms` section.** Monthly cadence: one invoice per `monthly_projection` entry. Quarterly: one invoice per 3 entries. Annual: one invoice per 12 entries. Always derive cadence from the contract — never assume monthly without checking. Payment terms (Net X days) must also come from the contract — never hardcode Net 30.
 3. **Two JEs per month** (one billing, one recognition). Total JEs = 2 × invoice count.
 4. **Every JE balances.** Debits sum equals credits sum. If not, the entry is malformed — fix it before emitting.
 5. **Sequence 1 is unlocked. All others are locked.** This is the initial state the frontend builds from. Date-based unlocking is the frontend's job, not the agent's.
@@ -350,7 +392,10 @@ Your response is **a single fenced JSON block**. No text before it. No text afte
 
 ## Worked illustration
 
-For the BPCE 2025-04 order (EUR 225,400, 24 months, 2 line items, monthly_projection with 24 entries each at ~EUR 9,391.67), the agent's full output looks like this — with `[…]` markers below indicating where the omitted middle entries go in a real response (in production the agent emits every invoice and every JE in full, no ellipses):
+For the BPCE 2025-04 order (EUR 225,400, 24 months, 2 line items, monthly_projection with 24 entries each at ~EUR 9,391.67), the agent's full output looks like this — with `[…]` markers below indicating where the omitted middle entries go in a real response (in production the agent emits every invoice and every JE in full, no ellipses).
+
+> **⚠ Example-specific values — do not copy as defaults.**
+> The BPCE contract happens to be monthly billing with Net 30 terms. Those values (`"billing_cadence": "monthly"`, `"payment_terms": "Net 30"`, `"payment_terms_days": 30`, `due_date = issue_date + 30 days`) apply **only to BPCE**. For any other contract — read the billing cadence and payment terms from the contract's `### Payment Terms` section and compute all dates accordingly. A Nokia contract with annual billing and Net 90 terms must produce `"billing_cadence": "annual"`, `"payment_terms": "Net 90"`, `"payment_terms_days": 90`, and `due_date = issue_date + 90 days`.
 
 ````
 ```json
@@ -423,7 +468,7 @@ For the BPCE 2025-04 order (EUR 225,400, 24 months, 2 line items, monthly_projec
         "contract_reference": "BPC20250430Q-82608",
         "ssa_reference": "CT25377"
       },
-      "notes": "Monthly invoice. Subject to Anaplan Master Subscription Software Agreement CT25377."
+      "notes": "Monthly subscription invoice covering April 2025. Subject to Anaplan Master Subscription Software Agreement CT25377."
     },
     {
       "invoice_id": "INV-LYZR-BPCE82608-002",
@@ -469,7 +514,7 @@ For the BPCE 2025-04 order (EUR 225,400, 24 months, 2 line items, monthly_projec
         "contract_reference": "BPC20250430Q-82608",
         "ssa_reference": "CT25377"
       },
-      "notes": "Monthly invoice. Subject to Anaplan Master Subscription Software Agreement CT25377."
+      "notes": "Monthly subscription invoice covering May 2025. Subject to Anaplan Master Subscription Software Agreement CT25377."
     }
     [… invoices 3 through 23 follow the same shape, one per month from June 2025 through February 2027 …],
     {
@@ -516,7 +561,7 @@ For the BPCE 2025-04 order (EUR 225,400, 24 months, 2 line items, monthly_projec
         "contract_reference": "BPC20250430Q-82608",
         "ssa_reference": "CT25377"
       },
-      "notes": "Monthly invoice. Subject to Anaplan Master Subscription Software Agreement CT25377. Final month includes rounding pickup of EUR 0.02."
+      "notes": "Monthly subscription invoice covering March 2027. Subject to Anaplan Master Subscription Software Agreement CT25377. Final month includes rounding pickup of EUR 0.02."
     }
   ],
   "journal_entries": [

@@ -294,6 +294,29 @@ function AgentConsole() {
   const prevStreamingRef = useRef(false);
   const searchParams = useSearchParams();
 
+  // Refs that capture latest values so the unmount cleanup can read them
+  // without stale-closure issues (P6 fix).
+  const isStreamingRef = useRef(isStreaming);
+  const messagesRef = useRef(messages);
+  const saveSessionRef = useRef(saveSession);
+  const activeSessionIdRef = useRef(activeSessionId);
+  useEffect(() => { isStreamingRef.current = isStreaming; }, [isStreaming]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { saveSessionRef.current = saveSession; }, [saveSession]);
+  useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
+
+  // P6: restore draft input on mount; save partial conversation on unmount if
+  // the user navigated away while a stream was still running.
+  useEffect(() => {
+    const draft = sessionStorage.getItem("console_input_draft");
+    if (draft) setInput(draft);
+    return () => {
+      if (isStreamingRef.current && messagesRef.current.length > 0) {
+        saveSessionRef.current(messagesRef.current, activeSessionIdRef.current ?? undefined);
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-save session when streaming finishes
   useEffect(() => {
     if (prevStreamingRef.current && !isStreaming && messages.length > 0) {
@@ -344,6 +367,7 @@ function AgentConsole() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isStreaming) return;
+    sessionStorage.removeItem("console_input_draft");
     sendMessage(input);
     setInput("");
   };
@@ -480,7 +504,12 @@ function AgentConsole() {
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setInput(val);
+                if (val) sessionStorage.setItem("console_input_draft", val);
+                else sessionStorage.removeItem("console_input_draft");
+              }}
               placeholder="Ask about a contract, allocation, schedule, or journal entry..."
               className="flex-1 glass-input rounded-xl px-4 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/40"
               disabled={isStreaming}

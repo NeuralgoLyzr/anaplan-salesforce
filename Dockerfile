@@ -1,32 +1,41 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Vidur — Next.js 15 Frontend  (standalone output mode)
+# Anaplan Rev-Rec — Next.js 15 Frontend  (standalone output mode)
 #
 # Uses Next.js `output: "standalone"` so only the node_modules that are
 # actually imported at runtime are bundled — image ~500 MB vs ~3.7 GB.
 #
-# Build:
-#   docker build -t vidur:latest .
+# Build (BuildKit required for cache mounts — ~2 min on repeat builds):
+#   DOCKER_BUILDKIT=1 docker build -t anaplan-revrec:latest .
 #
 # Run (secrets injected at runtime — NEVER baked into the image):
-#   docker run --rm -p 3000:3000 --env-file .env.local vidur:latest
+#   docker run --rm -p 3000:3000 --env-file .env.local anaplan-revrec:latest
 # ─────────────────────────────────────────────────────────────────────────────
+
+# Enable BuildKit inline syntax
+# syntax=docker/dockerfile:1
 
 # ── Stage 1: install dependencies ────────────────────────────────────────────
 FROM node:22-alpine AS deps
 
-RUN apk add --no-cache libc6-compat git
+# Cache the apk index between builds — avoids re-downloading on every build
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --update-cache libc6-compat
 
 WORKDIR /app
 
 # Copy lock files first — maximises Docker layer cache hits
 COPY package.json package-lock.json ./
 
-RUN npm ci --ignore-scripts
+# Cache ~/.npm between builds — only re-downloads packages that changed
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --ignore-scripts
 
 # ── Stage 2: build the Next.js app ───────────────────────────────────────────
 FROM node:22-alpine AS builder
 
-RUN apk add --no-cache libc6-compat git
+# git is required by gitagent at build time
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --update-cache libc6-compat git
 
 WORKDIR /app
 
@@ -38,7 +47,8 @@ COPY . .
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN --mount=type=cache,target=/root/.npm \
+    npm run build
 
 # ── Stage 3: minimal production runner ───────────────────────────────────────
 FROM node:22-alpine AS runner
