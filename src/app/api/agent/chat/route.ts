@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server";
-import { randomUUID } from "crypto";
 import { query, tool } from "@open-gitagent/gitagent";
 import { listSessions, getSession } from "@/lib/rev-rec/repo";
 import { getAgentDir } from "@/lib/agent-dir";
-import { upsertTraces } from "@/lib/db/agent-traces";
 
 // gitagent is Node-native (git/fs/child_process) — must run on the Node runtime.
 export const runtime = "nodejs";
@@ -151,16 +149,8 @@ export async function POST(req: NextRequest) {
 
   const agentDir = await getAgentDir();
 
-  // Priority 7 — trace every copilot query in Agent Traces (same DB the UI reads).
-  const traceId = `copilot-${randomUUID()}`;
-  const traceStart = new Date().toISOString();
-  const traceStartMs = Date.now();
-
   const stream = new ReadableStream({
     async start(controller) {
-      let totalTokens = 0;
-      let traceStatus: "success" | "error" = "success";
-
       try {
         const q = query({
           prompt: message,
@@ -212,18 +202,15 @@ export async function POST(req: NextRequest) {
             case "assistant":
               if (msg.errorMessage) {
                 sse(controller, { type: "error", error: msg.errorMessage });
-                traceStatus = "error";
               }
               if (msg.usage) {
                 sse(controller, { type: "usage", usage: msg.usage });
-                totalTokens += (msg.usage.inputTokens ?? 0) + (msg.usage.outputTokens ?? 0);
               }
               break;
 
             case "system":
               if (msg.subtype === "error") {
                 sse(controller, { type: "error", error: msg.content });
-                traceStatus = "error";
               }
               break;
           }
@@ -231,21 +218,9 @@ export async function POST(req: NextRequest) {
 
         sse(controller, { type: "done" });
       } catch (e) {
-        traceStatus = "error";
         sse(controller, { type: "error", error: (e as Error).message });
       } finally {
         controller.close();
-        // Write copilot trace to MongoDB so it appears in Agent Traces UI.
-        upsertTraces([{
-          id: traceId,
-          agent_id: "copilot",
-          session_id: sessionId ?? traceId,
-          status: traceStatus,
-          start_time: traceStart,
-          end_time: new Date().toISOString(),
-          duration_ms: Date.now() - traceStartMs,
-          total_tokens: totalTokens,
-        }]).catch(() => {});
       }
     },
     cancel() {
