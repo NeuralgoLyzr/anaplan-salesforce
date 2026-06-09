@@ -28,11 +28,12 @@ export async function listChatSessions(): Promise<ChatSessionDoc[]> {
   return c.find({}).sort({ updatedAt: -1 }).limit(100).toArray();
 }
 
-export async function upsertChatSession(session: Omit<ChatSessionDoc, never>): Promise<void> {
+export async function upsertChatSession(session: ChatSessionDoc): Promise<void> {
+  const { _id, ...fields } = session;
   const c = await col();
   await c.updateOne(
-    { _id: session._id },
-    { $set: session },
+    { _id },
+    { $set: fields },
     { upsert: true }
   );
 }
