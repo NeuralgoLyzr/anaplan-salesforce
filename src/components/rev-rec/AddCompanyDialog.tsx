@@ -111,6 +111,7 @@ export function AddCompanyDialog({ onCreated }: Props) {
             />
           </div>
 
+          {/* Drop zone — full size when empty, compact strip when files are present */}
           <div
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
@@ -121,13 +122,25 @@ export function AddCompanyDialog({ onCreated }: Props) {
             }}
             onClick={() => inputRef.current?.click()}
             className={cn(
-              "border-2 border-dashed rounded-xl px-4 py-6 text-center cursor-pointer transition-colors",
+              "border-2 border-dashed rounded-xl cursor-pointer transition-all",
               dragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30",
+              files.length > 0
+                ? "px-3 py-2 flex items-center gap-2"
+                : "px-4 py-8 text-center",
             )}
           >
-            <Upload className="w-5 h-5 text-primary/60 mx-auto mb-1" />
-            <p className="text-sm text-foreground/80">Drop PDFs here or click to browse</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">SSA and / or Order Schedule documents</p>
+            {files.length > 0 ? (
+              <>
+                <Upload className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                <span className="text-xs text-muted-foreground">Add more PDFs</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-5 h-5 text-primary/60 mx-auto mb-1" />
+                <p className="text-sm text-foreground/80">Drop PDFs here or click to browse</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">SSA and / or Order Schedule documents</p>
+              </>
+            )}
             <input
               ref={inputRef}
               type="file"
@@ -139,16 +152,16 @@ export function AddCompanyDialog({ onCreated }: Props) {
           </div>
 
           {files.length > 0 && (
-            <ul className="space-y-1.5 max-h-40 overflow-auto">
+            <ul className="space-y-1.5 max-h-40 overflow-y-auto">
               {files.map((f, i) => (
                 <li key={`${f.name}-${i}`} className="flex items-center gap-2 text-[12px] rounded-md border border-border px-2 py-1.5">
                   <FileText className="w-3.5 h-3.5 text-primary/70 shrink-0" />
                   <span className="truncate flex-1">{f.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{(f.size / 1024).toFixed(0)} KB</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                    className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                    className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shrink-0"
                     title="Remove"
                   >
                     <X className="w-3.5 h-3.5" />

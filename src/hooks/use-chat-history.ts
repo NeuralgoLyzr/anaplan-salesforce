@@ -11,23 +11,6 @@ export interface ChatSession {
   updatedAt: number;
 }
 
-const STORAGE_KEY = "agent-console-chat-history";
-
-function loadSessions(): ChatSession[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistSessions(sessions: ChatSession[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-}
-
 function deriveTitle(messages: ChatMessage[]): string {
   const firstUser = messages.find((m) => m.role === "user");
   if (!firstUser) return "New Chat";
@@ -38,9 +21,12 @@ function deriveTitle(messages: ChatMessage[]): string {
 export function useChatHistory() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
 
-  // Load from localStorage on mount
+  // Load from MongoDB on mount
   useEffect(() => {
-    setSessions(loadSessions());
+    fetch("/api/chat-sessions")
+      .then((r) => r.json())
+      .then((data: ChatSession[]) => setSessions(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   const saveSession = useCallback(
@@ -50,50 +36,49 @@ export function useChatHistory() {
       const now = Date.now();
       const id = existingId || `chat-${now}-${Math.random().toString(36).substring(2, 8)}`;
       const title = deriveTitle(messages);
+      const session: ChatSession = {
+        id,
+        title,
+        messages,
+        createdAt: existingId ? (sessions.find((s) => s.id === existingId)?.createdAt ?? now) : now,
+        updatedAt: now,
+      };
 
+      // Optimistic update
       setSessions((prev) => {
         const idx = prev.findIndex((s) => s.id === id);
-        let updated: ChatSession[];
-
         if (idx >= 0) {
-          // Update existing
-          updated = prev.map((s) =>
-            s.id === id ? { ...s, title, messages, updatedAt: now } : s
-          );
-        } else {
-          // Add new at the top
-          updated = [
-            { id, title, messages, createdAt: now, updatedAt: now },
-            ...prev,
-          ];
+          const updated = [...prev];
+          updated[idx] = session;
+          return updated;
         }
-
-        persistSessions(updated);
-        return updated;
+        return [session, ...prev];
       });
+
+      // Persist to MongoDB
+      fetch("/api/chat-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(session),
+      }).catch(() => {});
 
       return id;
     },
-    []
+    [sessions]
   );
 
   const deleteSession = useCallback((id: string) => {
-    setSessions((prev) => {
-      const updated = prev.filter((s) => s.id !== id);
-      persistSessions(updated);
-      return updated;
-    });
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    fetch(`/api/chat-sessions/${id}`, { method: "DELETE" }).catch(() => {});
   }, []);
 
   const clearAllSessions = useCallback(() => {
     setSessions([]);
-    persistSessions([]);
+    fetch("/api/chat-sessions", { method: "DELETE" }).catch(() => {});
   }, []);
 
   const getSession = useCallback(
-    (id: string): ChatSession | undefined => {
-      return sessions.find((s) => s.id === id);
-    },
+    (id: string): ChatSession | undefined => sessions.find((s) => s.id === id),
     [sessions]
   );
 
