@@ -13,7 +13,6 @@ export async function GET() {
     { name: "Pricing Agent", agentId: optional("LYZR_AGENT_PRICING_ID") },
     { name: "Anomaly Agent", agentId: optional("LYZR_AGENT_ANOMALY_ID") },
     { name: "Billing Agent", agentId: optional("LYZR_AGENT_BILLING_ID") },
-    { name: "Copilot",       agentId: "copilot" },
   ].filter((p) => p.agentId);
 
   return NextResponse.json({
