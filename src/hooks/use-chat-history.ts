@@ -55,11 +55,13 @@ export function useChatHistory() {
         return [session, ...prev];
       });
 
-      // Persist to MongoDB
+      // Persist to MongoDB. keepalive: true keeps the request alive even if
+      // the user closes the tab or navigates away (browser unload).
       fetch("/api/chat-sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(session),
+        keepalive: true,
       }).catch(() => {});
 
       return id;

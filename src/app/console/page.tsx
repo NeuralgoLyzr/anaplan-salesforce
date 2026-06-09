@@ -305,26 +305,35 @@ function AgentConsole() {
   useEffect(() => { saveSessionRef.current = saveSession; }, [saveSession]);
   useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
 
-  // P6: restore draft input on mount; save partial conversation on unmount if
-  // the user navigated away while a stream was still running.
+  // Restore draft input on mount.
+  // On unmount (any navigation): save whatever messages exist — covers both
+  // mid-stream (partial response) and the race where streaming just ended
+  // but the auto-save effect hadn't fired yet. MongoDB upsert is idempotent
+  // so saving again on a completed session is harmless.
   useEffect(() => {
     const draft = sessionStorage.getItem("console_input_draft");
     if (draft) setInput(draft);
     return () => {
-      if (isStreamingRef.current && messagesRef.current.length > 0) {
+      if (messagesRef.current.length > 0) {
         saveSessionRef.current(messagesRef.current, activeSessionIdRef.current ?? undefined);
       }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-save session when streaming finishes
+  // Auto-save session when streaming finishes.
+  // Uses refs for messages/saveSession/activeSessionId so we always read the
+  // truly final state — the isStreaming→false render can fire before React
+  // commits the last appendText delta, leaving stale empty agent content.
   useEffect(() => {
-    if (prevStreamingRef.current && !isStreaming && messages.length > 0) {
-      const id = saveSession(messages, activeSessionId ?? undefined);
-      if (id && !activeSessionId) setActiveSessionId(id);
+    if (prevStreamingRef.current && !isStreaming) {
+      const finalMessages = messagesRef.current;
+      if (finalMessages.length > 0) {
+        const id = saveSessionRef.current(finalMessages, activeSessionIdRef.current ?? undefined);
+        if (id && !activeSessionIdRef.current) setActiveSessionId(id);
+      }
     }
     prevStreamingRef.current = isStreaming;
-  }, [isStreaming, messages, saveSession, activeSessionId]);
+  }, [isStreaming]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRestoreSession = useCallback(
     (session: ChatSession) => {
