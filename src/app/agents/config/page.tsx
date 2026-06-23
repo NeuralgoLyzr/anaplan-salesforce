@@ -162,7 +162,7 @@ export default function AgentConfigPage() {
           {/* Pipeline agents */}
           <section className="space-y-2">
             <h2 className="text-sm font-semibold text-foreground">Pipeline agents · Lyzr</h2>
-            <p className="text-[11px] text-muted-foreground">The production automation. Each runs one step; the heavy math (price &amp; schedule) runs on Anaplan.</p>
+            <p className="text-[11px] text-muted-foreground">The production automation. Each runs one step; the heavy math (price &amp; schedule) runs on Lyzr.</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-1">
               {agents.map((a) => <AgentCard key={a.key} agent={a} />)}
             </div>

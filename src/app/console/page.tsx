@@ -439,7 +439,7 @@ function AgentConsole() {
               </div>
               <h3 className="text-lg font-semibold text-foreground">How can I help with revenue recognition?</h3>
               <p className="text-sm text-muted-foreground max-w-xl mt-2 mb-8 leading-relaxed">
-                I can read contracts, allocate and schedule revenue on Anaplan, flag unusual terms, and draft journal entries — all held for your approval.
+                I can read contracts, allocate and schedule revenue on Lyzr, flag unusual terms, and draft journal entries — all held for your approval.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                 {quickActions.map((action) => {

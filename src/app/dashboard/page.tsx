@@ -156,7 +156,7 @@ export default function Dashboard() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center">
         <div className="mb-5 inline-flex flex-col items-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/Anaplan_logo.svg.png" alt="Anaplan" className="h-10 w-auto" />
+          <img src="/lyzr-logo.webp" alt="Lyzr" className="h-10 w-auto" />
           <span className="mt-1.5 self-end flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70">
             powered by
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -167,7 +167,7 @@ export default function Dashboard() {
           Revenue <span className="text-primary">Recognition</span>
         </h1>
         <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-          From signed contract to posted journal entries — priced and scheduled on Anaplan, flagged for
+          From signed contract to posted journal entries — priced and scheduled on Lyzr, flagged for
           anomalies, and held for your approval.
         </p>
         {!loading && approvalCount > 0 && (
@@ -187,8 +187,8 @@ export default function Dashboard() {
           </span>
           <span className="inline-flex items-center gap-1.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/PLAN-82aa46a2.png" alt="Anaplan" className="h-4 w-auto" />
-            <span className="text-sm font-medium text-foreground">Anaplan MCP</span>
+            <img src="/lyzr-logo.webp" alt="Lyzr" className="h-4 w-auto" />
+            <span className="text-sm font-medium text-foreground">Lyzr MCP</span>
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
           </span>
         </div>
