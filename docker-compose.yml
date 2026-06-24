@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    # env_file loads .env directly — no shell interpolation, values are exact
+    env_file:
+      - .env
+    environment:
+      # Agent storage override (always use mounted volume path)
+      - AGENT_DIR=/app/agent
+    volumes:
+      # Mount only .gitagent/ for persistent runtime state (chat history, memory, etc.)
+      # The rest of agent/ (agent.yaml, skills, knowledge) lives inside the image.
+      - agent_data:/app/agent/.gitagent
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  agent_data:
+    driver: local
