@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import { Mulish, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Playfair_Display } from 'next/font/google';
 import "./globals.css";
 import SidebarLayout from "@/components/sidebar/SidebarLayout";
 import { ThemeProvider } from "@/lib/themes/ThemeProvider";
 
-// proxima-nova (the ADS typeface) is an Adobe Fonts / Typekit face and can't be
-// self-hosted without a kit. Mulish is the closest free match and renders as the
-// fallback; if a Typekit kit is added, `proxima-nova` (first in the CSS stack) wins.
-const mulish = Mulish({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-mulish',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-playfair',
   display: 'swap',
 });
 
@@ -42,7 +46,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${mulish.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <ThemeProvider>
           <SidebarLayout>{children}</SidebarLayout>

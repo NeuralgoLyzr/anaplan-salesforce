@@ -64,8 +64,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Link href="/dashboard" className="flex flex-col items-start gap-1 px-3 py-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                        src="/Anaplan_logo.svg.png"
-                        alt="Anaplan"
+                        src="/lyzr-logo.webp"
+                        alt="Lyzr"
                         className="h-6 w-auto object-contain"
                     />
                     <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">

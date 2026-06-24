@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @import 'tailwindcss';
 @plugin 'tailwindcss-animate';
@@ -54,10 +54,8 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-  /* Anaplan Design System — proxima-nova with the ADS fallback stack.
-     Mulish (free, closest match) renders until a Typekit proxima-nova kit is added. */
-  --font-sans: proxima-nova, var(--font-mulish), 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-serif: proxima-nova, var(--font-mulish), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-serif: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
 
   --color-primary-gradient-start: hsl(var(--primary-gradient-start));
@@ -71,68 +69,76 @@
 }
 
 :root {
-  /* ─── Anaplan Design System (ADS) palette ──────────────────────
-     Ported 1:1 from the ADS Storybook build. Navy #242d48 text,
-     interactive blue #3c67ea (pressed #1947ba), teal #14a687,
-     amber #ffbb16, red #db3743, borders #dfe2eb. Small 2–4px radii. */
+  /* ─── Lyzr warm-earth palette ─────────────────────────────────── */
 
-  --background: 0 0% 100%;            /* white surfaces */
-  --foreground: 225 33% 21%;          /* #242d48 navy */
+  /* Background: #F6F1EA */
+  --background: 35 40% 94%;
+  /* Main text: #2E1F16 */
+  --foreground: 23 35% 13%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 225 33% 21%;
+  /* Card: #FBF8F4 */
+  --card: 36 46% 97%;
+  --card-foreground: 23 35% 13%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 225 33% 21%;
+  --popover: 36 46% 97%;
+  --popover-foreground: 23 35% 13%;
 
-  --primary: 225 80% 58%;             /* #3c67ea ADS interactive blue */
-  --primary-foreground: 0 0% 100%;
+  /* Primary: #7B4A24 */
+  --primary: 26 55% 31%;
+  --primary-foreground: 35 40% 94%;
 
-  --secondary: 225 25% 38%;           /* #485478 slate */
-  --secondary-foreground: 0 0% 100%;
+  /* Secondary text: #8A7B6C */
+  --secondary: 30 12% 48%;
+  --secondary-foreground: 35 40% 94%;
 
-  --muted: 231 30% 95%;               /* #f0f1f7 */
-  --muted-foreground: 225 25% 38%;    /* #485478 */
+  /* Muted */
+  --muted: 32 29% 87%;
+  --muted-foreground: 30 12% 48%;
 
-  --accent: 223 56% 94%;              /* #e6ebf8 light blue tint */
-  --accent-foreground: 225 33% 21%;
+  /* Accent: #4A2C1A */
+  --accent: 23 48% 20%;
+  --accent-foreground: 35 40% 94%;
 
-  --destructive: 356 68% 54%;         /* #db3743 */
+  --destructive: 0 84% 55%;
   --destructive-foreground: 0 0% 100%;
 
-  --success: 167 78% 36%;             /* #14a687 teal */
-  --success-foreground: 0 0% 100%;
+  /* Success: warm olive-brown */
+  --success: 34 38% 38%;
+  --success-foreground: 35 40% 94%;
 
-  --warning: 42 100% 54%;             /* #ffbb16 amber */
-  --warning-foreground: 225 33% 21%;  /* navy text on amber */
+  --warning: 38 92% 50%;
+  --warning-foreground: 23 35% 13%;
 
-  --border: 225 23% 90%;              /* #dfe2eb */
-  --input: 225 23% 90%;
-  --ring: 225 80% 58%;                /* #3c67ea blue focus */
+  /* Border: #E7DED4 */
+  --border: 32 29% 87%;
+  --input: 32 29% 87%;
+  --ring: 26 55% 31%;
 
-  --radius: 0.25rem;                  /* ADS 4px */
+  --radius: 1rem;
 
-  /* Chart colors — ADS palette */
-  --chart-1: 225 80% 58%;             /* blue #3c67ea */
-  --chart-2: 173 100% 40%;            /* teal #00ccb5 */
-  --chart-3: 225 33% 21%;             /* navy #242d48 */
-  --chart-4: 42 100% 54%;             /* amber #ffbb16 */
-  --chart-5: 225 25% 60%;             /* slate */
+  /* Chart colors — warm earth palette */
+  --chart-1: 26 55% 31%;
+  --chart-2: 30 34% 49%;
+  --chart-3: 23 48% 20%;
+  --chart-4: 29 57% 64%;
+  --chart-5: 23 65% 35%;
 
-  /* Sidebar — light panel, ADS navy text + blue accents */
-  --sidebar: 231 30% 98%;
-  --sidebar-foreground: 225 33% 21%;
-  --sidebar-primary: 225 80% 58%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 223 56% 94%;      /* #e6ebf8 */
-  --sidebar-accent-foreground: 225 33% 21%;
-  --sidebar-border: 225 23% 90%;
-  --sidebar-ring: 225 80% 58%;        /* blue focus ring */
+  /* Sidebar: #F3EEE8 */
+  --sidebar: 32 31% 93%;
+  --sidebar-foreground: 27 24% 30%;
+  --sidebar-primary: 24 36% 18%;
+  --sidebar-primary-foreground: 35 40% 94%;
+  /* Active sidebar bg: #E8DED3 */
+  --sidebar-accent: 32 31% 87%;
+  /* Active sidebar text: #3E2A1D */
+  --sidebar-accent-foreground: 24 36% 18%;
+  --sidebar-border: 32 28% 87%;
+  --sidebar-ring: 26 55% 31%;
 
-  /* Gradient + highlight tokens used by CTA buttons */
-  --primary-gradient-start: 225 80% 58%;  /* #3c67ea */
-  --primary-gradient-end: 223 76% 41%;     /* #1947ba */
-  --accent-highlight: 42 100% 54%;
+  /* Gradient + highlight tokens */
+  --primary-gradient-start: 26 55% 31%;
+  --primary-gradient-end: 23 48% 20%;
+  --accent-highlight: 38 92% 50%;
 }
 
 html {
@@ -147,33 +153,36 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ADS page canvas — a flat, very light cool-grey surface (#f7f8fc). */
 .app-bg {
-  background-color: #f7f8fc;
+  background:
+    linear-gradient(hsla(30, 20%, 60%, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(30, 20%, 60%, 0.07) 1px, transparent 1px),
+    radial-gradient(ellipse at 20% 0%, hsla(30, 40%, 90%, 0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, hsla(24, 35%, 88%, 0.4) 0%, transparent 50%),
+    hsl(35, 40%, 94%);
+  background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%, 100% 100%;
 }
 
 :is(.dark *) .app-bg {
-  background-color: hsl(225 30% 8%);
+  background-color: hsl(23 30% 8%);
 }
 
-/* ADS surface card — solid white, #dfe2eb hairline border, 4px radius, the
-   subtle ADS elevation shadow. No glassmorphism (ADS is a flat system). */
 .glass-card {
-  background: #fff;
-  border: 1px solid #dfe2eb;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px hsl(225 33% 21% / 0.05);
+  background: hsla(36, 46%, 97%, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsla(32, 29%, 75%, 0.45);
+  box-shadow: 0 2px 16px hsla(24, 35%, 20%, 0.04), 0 1px 4px hsla(24, 35%, 20%, 0.02);
   transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out;
 }
 
 .glass-card:hover {
-  border-color: #b5bdd5;
-  box-shadow: 0 2px 6px hsl(225 33% 21% / 0.08);
+  box-shadow: 0 4px 24px hsla(24, 35%, 20%, 0.07), 0 2px 8px hsla(24, 35%, 20%, 0.04);
 }
 
 :is(.dark *) .glass-card {
-  background: hsl(225 28% 12%);
-  border: 1px solid hsl(225 20% 22%);
+  background: hsl(23 28% 12%);
+  border: 1px solid hsl(23 20% 22%);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
@@ -194,37 +203,40 @@ body {
 }
 
 .glass {
-  background: #fff;
-  border-bottom: 1px solid #dfe2eb;
+  background: hsla(36, 46%, 97%, 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid hsla(32, 29%, 75%, 0.4);
   transition: all var(--transition-duration, 0.2s) ease;
 }
 
 :is(.dark *) .glass {
-  background: rgba(15, 15, 20, 0.75);
+  background: rgba(15, 10, 8, 0.75);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-input {
-  background: #fff;
-  border: 1px solid #dfe2eb;
-  border-radius: 4px;
+  background: hsla(36, 46%, 97%, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsla(32, 29%, 75%, 0.5);
   transition: all var(--transition-duration, 0.2s) ease;
 }
 
 :is(.dark *) .glass-input {
-  background: rgba(25, 25, 30, 0.5);
+  background: rgba(25, 18, 12, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: #f3f4f6;
 }
 
 .glass-input:focus {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: hsl(var(--primary) / 0.5);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+  background: hsla(36, 46%, 99%, 0.9);
+  border-color: hsla(26, 55%, 31%, 0.45);
+  box-shadow: 0 0 0 3px hsla(26, 55%, 31%, 0.12);
 }
 
 :is(.dark *) .glass-input:focus {
-  background: rgba(30, 30, 35, 0.8);
+  background: rgba(30, 22, 15, 0.8);
   border-color: hsl(var(--primary) / 0.6);
   box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
 }
@@ -249,7 +261,7 @@ body {
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans), 'Inter', system-ui, sans-serif;
+    font-family: var(--font-serif), 'Playfair Display', Georgia, serif;
     letter-spacing: -0.02em;
   }
 
