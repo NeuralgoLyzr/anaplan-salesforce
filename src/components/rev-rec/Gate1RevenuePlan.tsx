@@ -6,9 +6,9 @@ import {
 } from "lucide-react";
 import type { Session, GateDecision } from "@/lib/rev-rec/types";
 import {
-  getHeaderSummary, getAllocation, getRevenueByMonth, getReconciliation,
+  getHeaderSummary, getRevenueByMonth, getReconciliation,
 } from "@/lib/rev-rec/view";
-import { SimpleTable } from "./SimpleTable";
+import { TraceableAllocationTable } from "./TraceableAllocationTable";
 import { MonthlyProjectionChart } from "./MonthlyProjectionChart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,6 @@ interface Props {
 
 export function Gate1RevenuePlan({ session, actionable, onDecision }: Props) {
   const header = getHeaderSummary(session);
-  const allocation = getAllocation(session);
   const monthStack = getRevenueByMonth(session);
   const recon = getReconciliation(session);
 
@@ -58,7 +57,7 @@ export function Gate1RevenuePlan({ session, actionable, onDecision }: Props) {
       {/* Allocation — full width, with its own approval */}
       <div className="glass-card rounded-xl p-4 space-y-3">
         <SectionTitle icon={Table2} title="Allocation" subtitle="SSP revenue allocation" />
-        <SimpleTable view={allocation} emptyLabel="No allocation returned by Pricing." />
+        <TraceableAllocationTable session={session} />
         <ApprovalBar
           label="allocation"
           gate={allocGate}
